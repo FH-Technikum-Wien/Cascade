@@ -19,14 +19,13 @@ public:
 
 	void UpdateTexture3D(Shader& shader, float newChunkHeight);
 	void RenderPoints(Shader& shader, bool wireframeMode) const;
-	void RenderTexture3D(Shader& shader) const;
 
 
 public:
 	float ChunkHeight;
 
 private:
-	void printError() const;
+	void RenderTexture3D(Shader& shader) const;
 	
 
 private:

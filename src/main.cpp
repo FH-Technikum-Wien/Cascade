@@ -7,16 +7,20 @@
 #include "world/chunk.h"
 #include <vector>
 
+// Defines the glfw window size
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
-
+// Defines the density texture size
 #define TEXTURE_WIDTH 64
 #define TEXTURE_HEIGHT 64
 #define TEXTURE_DEPTH 64
-
-ChunkDimensions chunkDimensions = { TEXTURE_WIDTH, TEXTURE_HEIGHT, TEXTURE_DEPTH };
-
+// Defines the threshold for the marching cube algorithm -> What will be treated as solid
 #define SOLID_THRESHOLD 0.51f
+
+// Size of each chunk
+ChunkDimensions chunkDimensions = { TEXTURE_WIDTH, TEXTURE_HEIGHT, TEXTURE_DEPTH };
+// List of all displayed chunks. Currently three -> Below, Current, Above
+std::vector<Chunk> chunks = std::vector<Chunk>();
 
 GLFWwindow* window = nullptr;
 Shader shader = Shader();
@@ -35,9 +39,8 @@ const char* GEOMETRY_SHADER_PATH = "src/shaders/shader.geom";
 
 bool wireframeModeActive = false;
 
-std::vector<Chunk> chunks = std::vector<Chunk>();
 
-// Rendered on each layer
+// Used for rendering on each z-layer of the 3D texture
 float rectangle[12] = 
 {
 	-1.0f, -1.0f,
@@ -78,12 +81,13 @@ int main()
 		// Handle iput
 		Input::ProcessContinuousInput(window, &camera);
 
+		// Change furthest chunk to be the next one
 		if (camera.Position.y > chunks[2].ChunkHeight) 
 		{
 			// Switch positions, so the lowest chunk becomes the highest
 			std::swap(chunks[0], chunks[1]);
 			std::swap(chunks[1], chunks[2]);
-
+			// Set new chunk height and update it's density texture
 			chunks[2].UpdateTexture3D(noiseShader, chunks[1].ChunkHeight + TEXTURE_HEIGHT);
 		}
 		else if(camera.Position.y < chunks[1].ChunkHeight)
@@ -91,16 +95,16 @@ int main()
 			// Switch positions, so the highest chunk becomes the lowest
 			std::swap(chunks[2], chunks[1]);
 			std::swap(chunks[1], chunks[0]);
-
+			// Set new chunk height and update it's density texture
 			chunks[0].UpdateTexture3D(noiseShader, chunks[1].ChunkHeight - TEXTURE_HEIGHT);
 		}
 
 		shader.activate();
 		shader.setMat4("viewMat", camera.GetViewMat());
+
+		// Render each chunk using marching cubes 
 		for (const Chunk& chunk : chunks)
-		{
 			chunk.RenderPoints(shader, wireframeModeActive);
-		}
 
 		// Swaps the drawn buffer with the buffer that got written to.
 		glfwSwapBuffers(window);
@@ -156,6 +160,7 @@ void setupData()
 	shader.addShader(GEOMETRY_SHADER_PATH, GEOMETRY_SHADER);
 
 	shader.activate();
+	// Set values that will not change
 	shader.setMat4("projectionMat", projectionMat);
 	shader.setInt("width", TEXTURE_WIDTH);
 	shader.setInt("height", TEXTURE_HEIGHT);
@@ -183,7 +188,7 @@ void setupData()
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-
+	// Add three chunks for startup
 	chunks.push_back(Chunk(chunkDimensions, -TEXTURE_HEIGHT, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
 	chunks.push_back(Chunk(chunkDimensions,				  0, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
 	chunks.push_back(Chunk(chunkDimensions,  TEXTURE_HEIGHT, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -206,7 +211,5 @@ void mousePositionCallback(GLFWwindow* window, double xPos, double yPos)
 void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
-	{
 		wireframeModeActive = !wireframeModeActive;
-	}
 }
