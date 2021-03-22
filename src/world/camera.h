@@ -55,10 +55,10 @@ public:
 			Position += Orientation * glm::vec3(1.0f, 0.0f, 0.0f) * movementSpeed;
 			break;
 		case CameraMovement::UP:
-			Position += Orientation * glm::vec3(0.0f, 1.0f, 0.0f) * movementSpeed;
+			Position += glm::vec3(0.0f, 1.0f, 0.0f) * movementSpeed;
 			break;
 		case CameraMovement::DOWN:
-			Position -= Orientation * glm::vec3(0.0f, 1.0f, 0.0f) * movementSpeed;
+			Position -= glm::vec3(0.0f, 1.0f, 0.0f) * movementSpeed;
 			break;
 		}
 	}
