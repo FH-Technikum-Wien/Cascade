@@ -12,6 +12,11 @@ in int mcIndex[];
 
 out vec3 mcPos;
 
+/*
+* Thanks to Kajetan for providing the following tables!
+* https://git.hammerle.me/kjhammerle/spg-project/src/master/resources/geometry.gs
+*/
+
 // List of all possible vertices
 vec3 vertices[13] = {
     vec3(0.0, 0.0, 0.0), vec3(0.5, 1.0, 1.0), vec3(0.0, 0.5, 1.0), 
@@ -190,13 +195,13 @@ int mcCases[3072] = {
 void main()
 {
 	vec4 globalPos = gl_in[0].gl_Position;
-    //vec4 test = vec4(globalPos.x, globalPos.y + chunkHeight, globalPos.z, globalPos.w);
     // Each case is 12 entries long
     int index = mcIndex[0] * 12;
     for(int i = 0; i < 12; i += 3)
     {
         for(int j = 0; j < 3; j++)
         {
+            // Calculate actual vertex position
             gl_Position = projectionMat * viewMat * (globalPos + vec4(vertices[mcCases[index + i + j]], 0.0));
             // Pass position to fragment shader
             mcPos = pos[0];

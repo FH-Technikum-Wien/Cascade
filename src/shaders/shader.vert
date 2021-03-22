@@ -22,9 +22,11 @@ void main()
 
 	// Set vertex position (using chunk height)
 	gl_Position = vec4(vec3(x, y + chunkHeight, z), 1.0);
+
 	float xStep = 1.0 / (width - 1);
 	float yStep = 1.0 / (height - 1);
 	float zStep = 1.0 / (depth - 1);
+	// Position inside the 3D texture (values between 0 and 1 -> aka uv coords but in 3D)
 	pos = vec3(x * xStep, y * yStep, z * zStep);
 
 	// Calculate all marching cube indices with the corners

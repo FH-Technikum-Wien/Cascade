@@ -8,6 +8,6 @@ out vec4 FragColor;
 void main()
 {
 	// Use position to determine color from noise texture
-	float c = texture(tex3D, mcPos).x;
+	float c = texture(tex3D, mcPos).r;
 	FragColor = vec4(c,c,c,1.0);
 }
