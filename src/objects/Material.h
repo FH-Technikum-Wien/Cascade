@@ -13,6 +13,7 @@ class Material
 public:
 	unsigned int texture = 0;
 	unsigned int normalMap = 0;
+	unsigned int displacementMap = 0;
 	glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
 	float ambientStrength = 1;
 	float diffuseStrength = 1;
@@ -28,9 +29,16 @@ public:
 		this->normalMap = LoadTexture(normalMapPath, colorFormat);
 	}
 
+	Material(const char* texturePath, const char* normalMapPath, const char* displacementMapPath, unsigned int colorFormat)
+	{
+		this->texture = LoadTexture(texturePath, colorFormat);
+		this->normalMap = LoadTexture(normalMapPath, colorFormat);
+		this->displacementMap = LoadTexture(displacementMapPath, colorFormat);
+	}
+
 	unsigned int LoadTexture(const char* path, unsigned int colorFormat)
 	{
-		stbi_set_flip_vertically_on_load(true);
+		//stbi_set_flip_vertically_on_load(true);
 		unsigned int texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);

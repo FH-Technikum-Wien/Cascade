@@ -179,6 +179,9 @@
     <ClInclude Include="src\world\Light.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="art\bricks2.jpg" />
+    <Image Include="art\bricks2_disp.jpg" />
+    <Image Include="art\bricks2_normal.jpg" />
     <Image Include="art\brickWall.jpg" />
     <Image Include="art\brickWall_normal.jpg" />
   </ItemGroup>

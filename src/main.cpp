@@ -28,7 +28,7 @@ std::vector<Chunk> chunks = std::vector<Chunk>();
 GLFWwindow* window = nullptr;
 Shader shader = Shader();
 Shader noiseShader = Shader();
-Camera camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), 0.025f);
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), 0.01f);
 
 unsigned int VAO = 0;
 unsigned int VBO = 0;
@@ -64,9 +64,18 @@ const char* FRAGMENT_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.frag
 const char* BRICK_WALL = "art/brickWall.jpg";
 const char* BRICK_WALL_NORMAL = "art/brickWall_normal.jpg";
 
+const char* BRICK_WALL_2 = "art/bricks2.jpg";
+const char* BRICK_WALL_2_NORMAL = "art/bricks2_normal.jpg";
+const char* BRICK_WALL_2_DISPLACEMENT = "art/bricks2_disp.jpg";
+
 Plane plane;
 Light light;
-glm::mat4 lightSpaceMat;
+
+float heightScale = 0.1f;
+float heightScaleSteps = 0.05f;
+
+int steps = 10;
+int refinementSteps = 1;
 
 
 
@@ -146,6 +155,16 @@ void renderDisplacement()
 		shader.setMat4("viewMat", camera.GetViewMat());
 		shader.setVec3("cameraPos", camera.Position);
 		shader.setFloat("bumpiness", Input::Bumpiness);
+		shader.setFloat("heightScale", heightScale);
+		shader.setInt("steps", steps);
+		shader.setInt("refinementSteps", refinementSteps);
+
+		std::string lastInput =
+			"Bumpiness: " + std::to_string(Input::Bumpiness) +
+			" | HeightScale: " + std::to_string(heightScale) +
+			" | Steps: " + std::to_string(steps) +
+			" | Refinement Steps: " + std::to_string(refinementSteps);
+		glfwSetWindowTitle(window, lastInput.c_str());
 
 		plane.render(shader);
 
@@ -163,12 +182,12 @@ void renderDisplacement()
 
 void setupDisplacement()
 {
-	Material material = Material(BRICK_WALL, BRICK_WALL_NORMAL, GL_RGB);
-	material.ambientStrength = 0.3f;
+	Material material = Material(BRICK_WALL_2, BRICK_WALL_2_NORMAL, BRICK_WALL_2_DISPLACEMENT, GL_RGB);
+	material.ambientStrength = 0.1f;
 	material.diffuseStrength = 1.0f;
-	material.specularStrength = 0.6f;
-	material.focus = 64.0f;
-	plane = Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 180.0f, 180.0f), glm::vec3(1.0f));
+	material.specularStrength = 0.2f;
+	material.focus = 32.0f;
+	plane = Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f));
 
 	// Projection Matrix for adding perspective.
 	glm::mat4 projectionMat;
@@ -180,10 +199,11 @@ void setupDisplacement()
 	shader.activate();
 	shader.setInt("diffuseTexture", 0);
 	shader.setInt("normalMap", 1);
+	shader.setInt("displacementMap", 2);
 	shader.setMat4("projectionMat", projectionMat);
 	shader.setFloat("ambientLightAmount", 1.0f);
 
-	light = Light(glm::vec3(0.5f, 0.2f, 0.3f), 1.0f);
+	light = Light(glm::vec3(0.2f, 0.5f, 0.2f), 1.0f);
 	light.activateLight(shader);
 }
 
@@ -299,6 +319,21 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 {
 	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
 		wireframeModeActive = !wireframeModeActive;
+
+	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+		heightScale -= heightScaleSteps;
+
+	if (key == GLFW_KEY_E && action == GLFW_PRESS)
+		heightScale += heightScaleSteps;
+
+	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+		++steps;
+	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+		--steps;
+	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+		++refinementSteps;
+	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+		--refinementSteps;
 }
 #pragma endregion
 

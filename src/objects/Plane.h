@@ -27,7 +27,7 @@ public:
 
 		this->material = material;
 		glm::vec3 texScale = glm::vec3(scale);
-		scale = scale / glm::vec3(2.0f);
+		//scale = scale / glm::vec3(2.0f);
 
 		vertices = new float[18]{
 			-scale.x,  scale.y, 0.0f,
@@ -39,12 +39,12 @@ public:
 		};
 
 		normals = new float[18]{
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f, -1.0f,
+			0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f, 1.0f,
 		};
 
 		uvs = new float[12]{
@@ -73,6 +73,10 @@ public:
 		// Add normalMap
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, material.normalMap);
+
+		// Add displacement
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, material.displacementMap);
 
 		glBindVertexArray(VAO);
 		shader.setMat4("modelMat", transform);
@@ -111,6 +115,9 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, VBO_VERTICES);
 		// Copy vertex data into buffer's memory (into VBO which is bound to GL_ARRAY_BUFFER)
 		glBufferData(GL_ARRAY_BUFFER, (vertexCount * 3) * sizeof(float), vertices, GL_STATIC_DRAW);
+		// POSITION
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
 
 
 		glGenBuffers(1, &EBO);
@@ -118,10 +125,7 @@ private:
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
 
-		// POSITION
-		// Tell OpenGL how to interpret/read the vertex data (per vertex attribute, e.g. one vertex point)
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
+		
 		// NORMALS
 		glGenBuffers(1, &VBO_NORMALS);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO_NORMALS);
@@ -178,16 +182,18 @@ private:
 			float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
 
 			// Calculate x,y,z for the tangents
-			float tangentsX = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-			float tangentsY = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-			float tangentsZ = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+			glm::vec3 tangent = glm::vec3();
+			tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+			tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+			tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+			tangent = glm::normalize(tangent);
 
 			// All tangents same for triangle.
 			for (unsigned int j = 0; j < 3; j++)
 			{
-				tangents[tangentIndex] = tangentsX;
-				tangents[tangentIndex + 1] = tangentsY;
-				tangents[tangentIndex + 2] = tangentsZ;
+				tangents[tangentIndex] = tangent.x;
+				tangents[tangentIndex + 1] = tangent.y;
+				tangents[tangentIndex + 2] = tangent.z;
 				tangentIndex += 3;
 			}
 		}

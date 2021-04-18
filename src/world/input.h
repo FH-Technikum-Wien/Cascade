@@ -6,7 +6,7 @@
 class Input
 {
 public:
-    inline static float Bumpiness = 0.5f;
+    inline static float Bumpiness = 1.0f;
 
 	static void ProcessContinuousInput(GLFWwindow* window, Camera* camera) 
 	{
@@ -31,9 +31,9 @@ public:
 
     static void ProcessScrollInput(GLFWwindow* window, double xoffset, double yoffset)
     {
-        float stepsSize = Bumpiness <= 1 ? 0.1f : 0.5f;
+        float stepsSize = Bumpiness <= 0.5f ? 0.05f : 0.1f;
         float newBumpiness = (yoffset > 0 ? stepsSize : -stepsSize) + Bumpiness;
-        newBumpiness = std::min(10.0f, std::max(0.0f, newBumpiness));
+        newBumpiness = std::min(2.0f, std::max(0.0f, newBumpiness));
         Bumpiness = newBumpiness;
     }
 
