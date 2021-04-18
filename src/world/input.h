@@ -6,6 +6,7 @@
 class Input
 {
 public:
+    inline static float Bumpiness = 0.5f;
 
 	static void ProcessContinuousInput(GLFWwindow* window, Camera* camera) 
 	{
@@ -27,5 +28,13 @@ public:
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
             camera->ProcessInput(CameraMovement::DOWN);
 	}
+
+    static void ProcessScrollInput(GLFWwindow* window, double xoffset, double yoffset)
+    {
+        float stepsSize = Bumpiness <= 1 ? 0.1f : 0.5f;
+        float newBumpiness = (yoffset > 0 ? stepsSize : -stepsSize) + Bumpiness;
+        newBumpiness = std::min(10.0f, std::max(0.0f, newBumpiness));
+        Bumpiness = newBumpiness;
+    }
 
 };

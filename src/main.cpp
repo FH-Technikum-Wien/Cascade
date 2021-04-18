@@ -6,10 +6,13 @@
 #include "world/input.h"
 #include "world/chunk.h"
 #include <vector>
+#include "objects/Material.h"
+#include "objects/Plane.h"
+#include "world/Light.h"
 
 // Defines the glfw window size
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
+#define SCREEN_WIDTH 1920.0f
+#define SCREEN_HEIGHT 1080.0f
 // Defines the density texture size
 #define TEXTURE_WIDTH 64
 #define TEXTURE_HEIGHT 64
@@ -25,94 +28,67 @@ std::vector<Chunk> chunks = std::vector<Chunk>();
 GLFWwindow* window = nullptr;
 Shader shader = Shader();
 Shader noiseShader = Shader();
-Camera camera = Camera(glm::vec3(32.0f, 32.0f, 128.0f), 0.5f);
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), 0.025f);
 
 unsigned int VAO = 0;
 unsigned int VBO = 0;
 
-const char* NOISE_VERTEX_SHADER_PATH = "src/shaders/noiseShader.vert";
-const char* NOISE_FRAGMENT_SHADER_PATH = "src/shaders/noiseShader.frag";
+const char* NOISE_VERTEX_SHADER_PATH = "src/shaders/procedural/noiseShader.vert";
+const char* NOISE_FRAGMENT_SHADER_PATH = "src/shaders/procedural/noiseShader.frag";
 
-const char* VERTEX_SHADER_PATH = "src/shaders/shader.vert";
-const char* FRAGMENT_SHADER_PATH = "src/shaders/shader.frag";
-const char* GEOMETRY_SHADER_PATH = "src/shaders/shader.geom";
+const char* VERTEX_SHADER_PATH = "src/shaders/procedural/shader.vert";
+const char* FRAGMENT_SHADER_PATH = "src/shaders/procedural/shader.frag";
+const char* GEOMETRY_SHADER_PATH = "src/shaders/procedural/shader.geom";
 
 bool wireframeModeActive = false;
 
-
 // Used for rendering on each z-layer of the 3D texture
-float rectangle[12] = 
+float rectangle[12] =
 {
 	-1.0f, -1.0f,
 	-1.0f,  1.0f,
 	 1.0f, -1.0f,
 
-     1.0f,  1.0f,
+	 1.0f,  1.0f,
 	-1.0f,  1.0f,
 	 1.0f, -1.0f,
 };
 
 
+
+// Displacement
+
+const char* VERTEX_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.vert";
+const char* FRAGMENT_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.frag";
+
+const char* BRICK_WALL = "art/brickWall.jpg";
+const char* BRICK_WALL_NORMAL = "art/brickWall_normal.jpg";
+
+Plane plane;
+Light light;
+glm::mat4 lightSpaceMat;
+
+
+
 void setupGLFW();
-void setupData();
-void printError();
+
+void renderDisplacement();
+void setupDisplacement();
+
+void renderProcedural();
+void setupProcedural();
+
 void mousePositionCallback(GLFWwindow* window, double xPos, double yPos);
 void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-int main() 
+void printError();
+
+int main()
 {
 	setupGLFW();
-	setupData();
+	renderDisplacement();
+	//renderProcedural();
 
-	glDisable(GL_CULL_FACE);
-
-	while (!glfwWindowShouldClose(window))
-	{
-		printError();
-
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
-
-		// Sets one color for window (background).
-		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
-		// Clear color buffer and depth buffer.
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		// Handle iput
-		Input::ProcessContinuousInput(window, &camera);
-
-		// Change furthest chunk to be the next one
-		if (camera.Position.y > chunks[2].ChunkHeight) 
-		{
-			// Switch positions, so the lowest chunk becomes the highest
-			std::swap(chunks[0], chunks[1]);
-			std::swap(chunks[1], chunks[2]);
-			// Set new chunk height and update it's density texture
-			chunks[2].UpdateTexture3D(noiseShader, chunks[1].ChunkHeight + TEXTURE_HEIGHT);
-		}
-		else if(camera.Position.y < chunks[1].ChunkHeight)
-		{
-			// Switch positions, so the highest chunk becomes the lowest
-			std::swap(chunks[2], chunks[1]);
-			std::swap(chunks[1], chunks[0]);
-			// Set new chunk height and update it's density texture
-			chunks[0].UpdateTexture3D(noiseShader, chunks[1].ChunkHeight - TEXTURE_HEIGHT);
-		}
-
-		shader.activate();
-		shader.setMat4("viewMat", camera.GetViewMat());
-
-		// Render each chunk using marching cubes 
-		for (const Chunk& chunk : chunks)
-			chunk.RenderPoints(shader, wireframeModeActive);
-
-		// Swaps the drawn buffer with the buffer that got written to.
-		glfwSwapBuffers(window);
-		// Checks if any events are triggered and executes callbacks.
-		glfwPollEvents();
-	}
-
-	glfwTerminate();
 	return 0;
 }
 
@@ -145,11 +121,129 @@ void setupGLFW()
 	glfwSetCursorPosCallback(window, mousePositionCallback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	glfwSetKeyCallback(window, keyPressedCallback);
+	glfwSetScrollCallback(window, Input::ProcessScrollInput);
 	// Lock cursor.
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void setupData() 
+void renderDisplacement()
+{
+	setupDisplacement();
+
+	while (!glfwWindowShouldClose(window))
+	{
+		printError();
+
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
+		// Sets one color for window (background).
+		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
+		// Clear color buffer and depth buffer.
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.activate();
+		shader.setMat4("viewMat", camera.GetViewMat());
+		shader.setVec3("cameraPos", camera.Position);
+		shader.setFloat("bumpiness", Input::Bumpiness);
+
+		plane.render(shader);
+
+		// Handle iput
+		Input::ProcessContinuousInput(window, &camera);
+
+		// Swaps the drawn buffer with the buffer that got written to.
+		glfwSwapBuffers(window);
+		// Checks if any events are triggered and executes callbacks.
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+}
+
+void setupDisplacement()
+{
+	Material material = Material(BRICK_WALL, BRICK_WALL_NORMAL, GL_RGB);
+	material.ambientStrength = 0.3f;
+	material.diffuseStrength = 1.0f;
+	material.specularStrength = 0.6f;
+	material.focus = 64.0f;
+	plane = Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 180.0f, 180.0f), glm::vec3(1.0f));
+
+	// Projection Matrix for adding perspective.
+	glm::mat4 projectionMat;
+	projectionMat = glm::perspective(glm::radians(45.0f), SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
+
+	shader.addShader(VERTEX_SHADER_DISPLACEMENT, ShaderType::VERTEX_SHADER);
+	shader.addShader(FRAGMENT_SHADER_DISPLACEMENT, ShaderType::FRAGMENT_SHADER);
+
+	shader.activate();
+	shader.setInt("diffuseTexture", 0);
+	shader.setInt("normalMap", 1);
+	shader.setMat4("projectionMat", projectionMat);
+	shader.setFloat("ambientLightAmount", 1.0f);
+
+	light = Light(glm::vec3(0.5f, 0.2f, 0.3f), 1.0f);
+	light.activateLight(shader);
+}
+
+#pragma region Procedural
+void renderProcedural()
+{
+	setupProcedural();
+
+	glDisable(GL_CULL_FACE);
+
+	while (!glfwWindowShouldClose(window))
+	{
+		printError();
+
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
+		// Sets one color for window (background).
+		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
+		// Clear color buffer and depth buffer.
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Handle iput
+		Input::ProcessContinuousInput(window, &camera);
+
+		// Change furthest chunk to be the next one
+		if (camera.Position.y > chunks[2].ChunkHeight)
+		{
+			// Switch positions, so the lowest chunk becomes the highest
+			std::swap(chunks[0], chunks[1]);
+			std::swap(chunks[1], chunks[2]);
+			// Set new chunk height and update it's density texture
+			chunks[2].UpdateTexture3D(noiseShader, chunks[1].ChunkHeight + TEXTURE_HEIGHT);
+		}
+		else if (camera.Position.y < chunks[1].ChunkHeight)
+		{
+			// Switch positions, so the highest chunk becomes the lowest
+			std::swap(chunks[2], chunks[1]);
+			std::swap(chunks[1], chunks[0]);
+			// Set new chunk height and update it's density texture
+			chunks[0].UpdateTexture3D(noiseShader, chunks[1].ChunkHeight - TEXTURE_HEIGHT);
+		}
+
+		shader.activate();
+		shader.setMat4("viewMat", camera.GetViewMat());
+
+		// Render each chunk using marching cubes 
+		for (const Chunk& chunk : chunks)
+			chunk.RenderPoints(shader, wireframeModeActive);
+
+		// Swaps the drawn buffer with the buffer that got written to.
+		glfwSwapBuffers(window);
+		// Checks if any events are triggered and executes callbacks.
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
+}
+
+void setupProcedural()
 {
 	// Projection Matrix for adding perspective.
 	glm::mat4 projectionMat;
@@ -190,19 +284,12 @@ void setupData()
 
 	// Add three chunks for startup
 	chunks.push_back(Chunk(chunkDimensions, -TEXTURE_HEIGHT, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
-	chunks.push_back(Chunk(chunkDimensions,				  0, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
-	chunks.push_back(Chunk(chunkDimensions,  TEXTURE_HEIGHT, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
+	chunks.push_back(Chunk(chunkDimensions, 0, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
+	chunks.push_back(Chunk(chunkDimensions, TEXTURE_HEIGHT, noiseShader, VAO, SCREEN_WIDTH, SCREEN_HEIGHT));
 }
+#pragma endregion
 
-void printError()
-{
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) 
-	{
-		std::cout << "Error: " << error << std::endl;
-	}
-}
-
+#pragma region Input
 void mousePositionCallback(GLFWwindow* window, double xPos, double yPos)
 {
 	camera.ProcessMouse(xPos, yPos);
@@ -212,4 +299,15 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 {
 	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
 		wireframeModeActive = !wireframeModeActive;
+}
+#pragma endregion
+
+
+void printError()
+{
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		std::cout << "Error: " << error << std::endl;
+	}
 }

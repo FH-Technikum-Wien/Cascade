@@ -83,10 +83,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>opengl\include;opengl\glad;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>opengl\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <LibraryPath>opengl\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>opengl\include;opengl\glad;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>opengl\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,11 +159,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl\lib\glfw3.dll" />
-    <None Include="src\shaders\noiseShader.frag" />
-    <None Include="src\shaders\noiseShader.vert" />
-    <None Include="src\shaders\shader.frag" />
-    <None Include="src\shaders\shader.geom" />
-    <None Include="src\shaders\shader.vert" />
+    <None Include="src\shaders\displacement\shader.frag" />
+    <None Include="src\shaders\displacement\shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="opengl\lib\glfw3.lib" />
@@ -170,11 +169,18 @@
     <Library Include="opengl\lib\libglfw3dll.a" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\objects\Plane.h" />
+    <ClInclude Include="src\objects\Material.h" />
+    <ClInclude Include="src\shaders\shader.h" />
     <ClInclude Include="src\world\chunk.h" />
     <ClInclude Include="opengl\include\glad\glad.h" />
-    <ClInclude Include="src\shaders\shader.h" />
     <ClInclude Include="src\world\camera.h" />
     <ClInclude Include="src\world\Input.h" />
+    <ClInclude Include="src\world\Light.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="art\brickWall.jpg" />
+    <Image Include="art\brickWall_normal.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

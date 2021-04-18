@@ -27,11 +27,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl\lib\glfw3.dll" />
-    <None Include="src\shaders\shader.frag" />
-    <None Include="src\shaders\shader.geom" />
-    <None Include="src\shaders\shader.vert" />
-    <None Include="src\shaders\noiseShader.frag" />
-    <None Include="src\shaders\noiseShader.vert" />
+    <None Include="src\shaders\displacement\shader.frag" />
+    <None Include="src\shaders\displacement\shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="opengl\lib\glfw3.lib" />
@@ -40,9 +37,6 @@
     <Library Include="opengl\lib\libglfw3dll.a" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\shaders\shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="opengl\include\glad\glad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -55,5 +49,25 @@
     <ClInclude Include="src\world\chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\objects\Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\objects\Plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shaders\shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="art\brickWall.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="art\brickWall_normal.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
