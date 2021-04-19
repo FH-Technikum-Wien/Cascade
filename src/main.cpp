@@ -166,7 +166,7 @@ void renderDisplacement()
 			" | Refinement Steps: " + std::to_string(refinementSteps);
 		glfwSetWindowTitle(window, lastInput.c_str());
 
-		plane.render(shader);
+		plane.render(shader, wireframeModeActive);
 
 		// Handle iput
 		Input::ProcessContinuousInput(window, &camera);
@@ -191,7 +191,7 @@ void setupDisplacement()
 
 	// Projection Matrix for adding perspective.
 	glm::mat4 projectionMat;
-	projectionMat = glm::perspective(glm::radians(45.0f), SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
+	projectionMat = glm::perspective(glm::radians(45.0f), SCREEN_WIDTH / SCREEN_HEIGHT, 0.01f, 100.0f);
 
 	shader.addShader(VERTEX_SHADER_DISPLACEMENT, ShaderType::VERTEX_SHADER);
 	shader.addShader(FRAGMENT_SHADER_DISPLACEMENT, ShaderType::FRAGMENT_SHADER);

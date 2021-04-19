@@ -45,24 +45,30 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 cameraDirection)
 
     vec2 currentTexCoords = texCoords;
 
+    float stepSize;
+    vec2 deltaTexCoords;
+    float currentDisplacementDepth;
+    float currentDepth;
+
     // Repeat for each refinement step
-    for(int i = 1; i <= refinementSteps; i++)
+    for(int i = 1; i <= refinementSteps; ++i)
     {
-        // Decrease stepSize depending on refinement depth (1 -> 10 -> 100 -> ...)
-        int stepAmount = int(pow(steps, i));
+        // Decrease stepSize depending on refinement depth (10 -> 100 -> 1000 -> ...)
+        float stepAmount = pow(steps, i);
         // Shift amount per step
-        vec2 deltaTexCoords = p / stepAmount;
-        float stepSize = 1.0 / stepAmount;
+        deltaTexCoords = p / stepAmount;
+        // Step size
+        stepSize = 1.0 / stepAmount;
         
         // Continue from last depth (which is the last depth above the displaced surface)
         currentTexCoords = lastTexCoords;
-        float currentDepth = lastDepth;
-        float currentDisplacementDepth = texture(displacementMap, currentTexCoords).r;
+        currentDepth = lastDepth;
+        currentDisplacementDepth = texture(displacementMap, lastTexCoords).r;
 
         // Find first depth that is below displaced surface
         while(currentDepth < currentDisplacementDepth)
         {
-            // Save data for next refinement
+            // Save data for next refinement (before below displaced surface)
             lastTexCoords = currentTexCoords;
             lastDepth = currentDepth;
 
@@ -70,12 +76,25 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 cameraDirection)
             currentTexCoords -= deltaTexCoords;
             // Get displacement value for it
             currentDisplacementDepth = texture(displacementMap, currentTexCoords).r;
-
             // Get next depth
             currentDepth += stepSize;
         }
     }
+
     return currentTexCoords;
+
+    /*
+    // Interpolate
+
+    // Get depth 
+    float afterDepth = currentDisplacementDepth - currentDepth;
+    float beforeDepth = texture(displacementMap, lastTexCoords).r - currentDepth + stepSize;
+    // Interpolate between both
+    float weigth = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = lastTexCoords * weigth + currentTexCoords * (1.0 - weigth);
+
+    return finalTexCoords;
+    */
 }
 
 

@@ -64,7 +64,7 @@ public:
 		initialize();
 	}
 
-	void render(const Shader& shader)
+	void render(const Shader& shader, bool wireframeMode)
 	{
 		// Add texture
 		glActiveTexture(GL_TEXTURE0);
@@ -78,6 +78,10 @@ public:
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, material.displacementMap);
 
+		// Set render mode to wireframe
+		if (wireframeMode)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		glBindVertexArray(VAO);
 		shader.setMat4("modelMat", transform);
 		shader.setFloat("ambientStrength", material.ambientStrength);
@@ -88,6 +92,9 @@ public:
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO_VERTICES);
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+
+		// Reset render mode
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 private:
@@ -119,12 +126,9 @@ private:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
 
-
 		glGenBuffers(1, &EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-
 		
 		// NORMALS
 		glGenBuffers(1, &VBO_NORMALS);
