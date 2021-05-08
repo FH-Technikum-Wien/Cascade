@@ -3,6 +3,7 @@
 #include <glad\glad.h>
 #include <glm/matrix.hpp>
 
+#include "../shaders/Shader.h"
 #include "Material.h"
 
 class Plane

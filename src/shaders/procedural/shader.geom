@@ -1,5 +1,6 @@
 #version 430
 
+
 layout(points) in;
 // Every marching-cube-state can have a maximum of 4 triangles with 3 vertices each -> 12
 layout(triangle_strip, max_vertices = 12) out;

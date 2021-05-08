@@ -1,4 +1,4 @@
-#include "chunk.h"
+#include "Chunk.h"
 #include <glm/gtx/transform.hpp>
 #include "input.h"
 

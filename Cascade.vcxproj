@@ -153,14 +153,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\world\chunk.cpp" />
+    <ClCompile Include="src\objects\Material.cpp" />
+    <ClCompile Include="src\world\ParticleSystem.cpp" />
+    <ClCompile Include="src\util\Random.cpp" />
+    <ClCompile Include="src\world\Chunk.cpp" />
     <ClCompile Include="opengl\glad\glad.c" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl\lib\glfw3.dll" />
-    <None Include="src\shaders\displacement\shader.frag" />
-    <None Include="src\shaders\displacement\shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="opengl\lib\glfw3.lib" />
@@ -169,12 +170,14 @@
     <Library Include="opengl\lib\libglfw3dll.a" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\world\ParticleSystem.h" />
     <ClInclude Include="src\objects\Plane.h" />
     <ClInclude Include="src\objects\Material.h" />
-    <ClInclude Include="src\shaders\shader.h" />
-    <ClInclude Include="src\world\chunk.h" />
+    <ClInclude Include="src\shaders\Shader.h" />
+    <ClInclude Include="src\util\Random.h" />
+    <ClInclude Include="src\world\Chunk.h" />
     <ClInclude Include="opengl\include\glad\glad.h" />
-    <ClInclude Include="src\world\camera.h" />
+    <ClInclude Include="src\world\Camera.h" />
     <ClInclude Include="src\world\Input.h" />
     <ClInclude Include="src\world\Light.h" />
   </ItemGroup>

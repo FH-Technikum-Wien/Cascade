@@ -1,5 +1,5 @@
 #pragma once
-#include "../shaders/shader.h"
+#include "../shaders/Shader.h"
 #include <iostream>
 
 struct ChunkDimensions

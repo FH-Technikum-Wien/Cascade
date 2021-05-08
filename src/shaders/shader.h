@@ -30,7 +30,7 @@ public:
 		glDeleteShader(shaderProgramID);
 	}
 
-	void addShader(const char* shaderPath, ShaderType type)
+	void addShader(const char* shaderPath, ShaderType type, bool shouldLinkProgram = true)
 	{
 		std::string shaderString = readFile(shaderPath);
 
@@ -59,14 +59,9 @@ public:
 
 		// Shader program
 		glAttachShader(shaderProgramID, shader);
-		glLinkProgram(shaderProgramID);
-		// Check compilation
-		glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &success);
-		if (!success)
-		{
-			glGetProgramInfoLog(shaderProgramID, 512, nullptr, infoLog);
-			std::cout << "ERROR::SHADER::PROGRAM::LINKING_ERROR\n" << infoLog << std::endl;
-		}
+
+		if (shouldLinkProgram)
+			linkProgram();
 
 		// Delete Shaders after linking, not needed anymore
 		glDeleteShader(shader);
@@ -76,6 +71,22 @@ public:
 	void activate() const
 	{
 		glUseProgram(shaderProgramID);
+	}
+
+	void linkProgram() const
+	{
+		int success;
+		char infoLog[512];
+
+		glLinkProgram(shaderProgramID);
+
+		// Check compilation
+		glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &success);
+		if (!success)
+		{
+			glGetProgramInfoLog(shaderProgramID, 512, nullptr, infoLog);
+			std::cout << "ERROR::SHADER::PROGRAM::LINKING_ERROR\n" << infoLog << std::endl;
+		}
 	}
 
 	void setBool(const std::string& name, bool value) const

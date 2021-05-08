@@ -1,13 +1,16 @@
 #include <stdexcept>
+#include <vector>
+#include <chrono>
+
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "shaders/shader.h"
-#include "world/camera.h"
-#include "world/input.h"
-#include "world/chunk.h"
-#include <vector>
+
 #include "objects/Material.h"
+#include "world/ParticleSystem.h"
 #include "objects/Plane.h"
+#include "world/Camera.h"
+#include "world/Input.h"
+#include "world/Chunk.h"
 #include "world/Light.h"
 
 // Defines the glfw window size
@@ -79,7 +82,20 @@ int refinementSteps = 1;
 
 
 
+// Particles
+
+const char* PARTICLE_UPDATE_VERTEX_SHADER = "src/shaders/particles/updating.vert";
+const char* PARTICLE_UPDATE_GEOMETRY_SHADER = "src/shaders/particles/updating.geom";
+
+const char* PARTICLE_RENDER_VERTEX_SHADER = "src/shaders/particles/rendering.vert";
+const char* PARTICLE_RENDER_GEOMETRY_SHADER = "src/shaders/particles/rendering.geom";
+const char* PARTICLE_RENDER_FRAGMENT_SHADER = "src/shaders/particles/rendering.frag";
+
+
+
 void setupGLFW();
+
+void renderParticleSystem();
 
 void renderDisplacement();
 void setupDisplacement();
@@ -95,7 +111,8 @@ void printError();
 int main()
 {
 	setupGLFW();
-	renderDisplacement();
+	renderParticleSystem();
+	//renderDisplacement();
 	//renderProcedural();
 
 	return 0;
@@ -104,10 +121,10 @@ int main()
 void setupGLFW()
 {
 	glfwInit();
-	// Tell GLFW that we're using OpenGL version 3.3 .
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	// Tell GLFW to use Core_Profile -> Smaller subset without backwards-compatibility (not needed).
+	// Tell GLFW that we're using OpenGL version 4.5
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	// Tell GLFW to use Core_Profile -> Smaller subset without backwards-compatibility (not needed)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "", nullptr, nullptr);
@@ -123,7 +140,7 @@ void setupGLFW()
 		throw std::runtime_error("Failed to initialize GLAD");
 	}
 
-	// Set OpenGL viewport.
+	// Set OpenGL viewport
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	glEnable(GL_DEPTH_TEST);
 	// Events
@@ -131,8 +148,73 @@ void setupGLFW()
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	glfwSetKeyCallback(window, keyPressedCallback);
 	glfwSetScrollCallback(window, Input::ProcessScrollInput);
-	// Lock cursor.
+	// Lock cursor
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	std::cout << glGetString(GL_VERSION) << std::endl;
+}
+
+void renderParticleSystem()
+{
+	Shader updateShader = Shader();
+	updateShader.addShader(PARTICLE_UPDATE_VERTEX_SHADER, ShaderType::VERTEX_SHADER, false);
+	updateShader.addShader(PARTICLE_UPDATE_GEOMETRY_SHADER, ShaderType::GEOMETRY_SHADER, false);
+
+	Shader renderShader = Shader();
+	renderShader.addShader(PARTICLE_RENDER_VERTEX_SHADER, ShaderType::VERTEX_SHADER, false);
+	renderShader.addShader(PARTICLE_RENDER_GEOMETRY_SHADER, ShaderType::GEOMETRY_SHADER, false);
+	renderShader.addShader(PARTICLE_RENDER_FRAGMENT_SHADER, ShaderType::FRAGMENT_SHADER, false);
+
+	Material material = Material(BRICK_WALL, GL_RGB);
+
+	ParticleSystem particleSystem = ParticleSystem(updateShader, renderShader, material);
+
+	// Projection Matrix for adding perspective
+	glm::mat4 projectionMat;
+	projectionMat = glm::perspective(glm::radians(45.0f), SCREEN_WIDTH / SCREEN_HEIGHT, 0.01f, 100.0f);
+
+	renderShader.activate();
+	renderShader.setMat4("projectionMat", projectionMat);
+	renderShader.setInt("diffuseTexture", 0);
+
+	std::chrono::high_resolution_clock clock;
+	auto lastFrameTime = clock.now();
+
+	while (!glfwWindowShouldClose(window))
+	{
+		// Calculate deltaTime in seconds
+		auto currentFrameTime = clock.now();
+		double deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentFrameTime - lastFrameTime).count() / 1e9;
+		lastFrameTime = currentFrameTime;
+
+		printError();
+
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
+		// Sets one color for window (background)
+		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
+		// Clear color buffer and depth buffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		particleSystem.SetMatrices(projectionMat, camera.GetViewMat(), camera.Position, glm::vec3(0, 1, 0) * camera.Orientation);
+
+		particleSystem.Update(updateShader, deltaTime);
+
+		renderShader.activate();
+		renderShader.setVec3("cameraPos", camera.Position);
+		particleSystem.Render(renderShader);
+
+		// Handle iput
+		Input::ProcessContinuousInput(window, &camera);
+
+		// Swaps the drawn buffer with the buffer that got written to
+		glfwSwapBuffers(window);
+		// Checks if any events are triggered and executes callbacks
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
 }
 
 void renderDisplacement()
@@ -146,9 +228,9 @@ void renderDisplacement()
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 
-		// Sets one color for window (background).
+		// Sets one color for window (background)
 		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
-		// Clear color buffer and depth buffer.
+		// Clear color buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.activate();
@@ -171,9 +253,9 @@ void renderDisplacement()
 		// Handle iput
 		Input::ProcessContinuousInput(window, &camera);
 
-		// Swaps the drawn buffer with the buffer that got written to.
+		// Swaps the drawn buffer with the buffer that got written to
 		glfwSwapBuffers(window);
-		// Checks if any events are triggered and executes callbacks.
+		// Checks if any events are triggered and executes callbacks
 		glfwPollEvents();
 	}
 
@@ -189,7 +271,7 @@ void setupDisplacement()
 	material.focus = 32.0f;
 	plane = Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f));
 
-	// Projection Matrix for adding perspective.
+	// Projection Matrix for adding perspective
 	glm::mat4 projectionMat;
 	projectionMat = glm::perspective(glm::radians(45.0f), SCREEN_WIDTH / SCREEN_HEIGHT, 0.01f, 100.0f);
 
@@ -221,9 +303,9 @@ void renderProcedural()
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 
-		// Sets one color for window (background).
+		// Sets one color for window (background)
 		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
-		// Clear color buffer and depth buffer.
+		// Clear color buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Handle iput
@@ -254,9 +336,9 @@ void renderProcedural()
 		for (const Chunk& chunk : chunks)
 			chunk.RenderPoints(shader, wireframeModeActive);
 
-		// Swaps the drawn buffer with the buffer that got written to.
+		// Swaps the drawn buffer with the buffer that got written to
 		glfwSwapBuffers(window);
-		// Checks if any events are triggered and executes callbacks.
+		// Checks if any events are triggered and executes callbacks
 		glfwPollEvents();
 	}
 
@@ -265,7 +347,7 @@ void renderProcedural()
 
 void setupProcedural()
 {
-	// Projection Matrix for adding perspective.
+	// Projection Matrix for adding perspective
 	glm::mat4 projectionMat;
 	projectionMat = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 1000.0f);
 
