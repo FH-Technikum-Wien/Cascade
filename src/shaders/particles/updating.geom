@@ -4,7 +4,7 @@
 layout(points) in;
 // Return as points
 layout(points) out;
-// Limit emitted vertices to 40
+// Limit emitted vertices to 85 (GTX 1070 TI limit)
 layout(max_vertices = 40) out;
 
 // Input from vertex shader
@@ -100,7 +100,7 @@ void main()
 			EndPrimitive();
 		}
 	}
-	else if(pLifetimeOut > -0.1)
+	else if(pLifetimeOut > 0.0)
 	{
 		// If particle has life time remaining, emit it
 		EmitVertex();

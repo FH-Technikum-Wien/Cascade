@@ -10,15 +10,15 @@ class ParticleSystem
 {
 public:
 	glm::vec3 SpawnPosition = glm::vec3(3.0f, 0.0f, 0.0f);
-	glm::vec3 VelocityMin = glm::vec3(-1, -1, -1);
-	glm::vec3 VelocityRange = glm::vec3(2, 2, 2);
-	glm::vec3 Gravity = glm::vec3(0, -1, 0);
-	glm::vec3 Color = glm::vec3(1.0f, 0.0f, 0.0f);
+	glm::vec3 VelocityMin = glm::vec3(-1, 0, -1);
+	glm::vec3 VelocityRange = glm::vec3(1, 2, 1);
+	glm::vec3 Gravity = glm::vec3(0, -2, 0);
+	glm::vec3 Color = glm::vec3(1.0f, 1.0f, 1.0f);
 	float Size = 0.1f;
 	float LifetimeMin = 1;
 	float LifetimeRange = 3;
-	float SpawnFrequence = 0.1f;
-	int NumberOfParticlesToSpawn = 1;
+	float SpawnFrequence = 0.5f;
+	int NumberOfParticlesToSpawn = 100;
 
 public:
 	ParticleSystem(const Camera& camera);
@@ -35,7 +35,10 @@ private:
 	const char* PARTICLE_RENDER_GEOMETRY_SHADER = "src/shaders/particles/rendering.geom";
 	const char* PARTICLE_RENDER_FRAGMENT_SHADER = "src/shaders/particles/rendering.frag";
 
-	const int MAX_PARTICLES = 40;
+	const int PARTICLE_HARDWARE_LIMIT = 40;
+	const int MAX_PARTICLES = 1000;
+
+	const char* BRICK_WALL_2 = "art/bricks2.jpg";
 
 	Shader m_updateShader = Shader();
 	Shader m_renderShader = Shader();
@@ -51,6 +54,7 @@ private:
 
 	float m_elapsedTime = 0;
 	int m_currentNumberOfParticles = 0;
+	int m_currentNumberOfGeneratorParticles = 0;
 
 	glm::mat4 m_viewMat;
 	glm::vec3 m_quad1;

@@ -11,6 +11,8 @@ void printError2()
 
 ParticleSystem::ParticleSystem(const Camera& camera)
 {
+	m_material = Material(BRICK_WALL_2, GL_RGB);
+
 	m_updateShader.addShader(PARTICLE_UPDATE_VERTEX_SHADER, ShaderType::VERTEX_SHADER, false);
 	m_updateShader.addShader(PARTICLE_UPDATE_GEOMETRY_SHADER, ShaderType::GEOMETRY_SHADER, false);
 
@@ -71,6 +73,7 @@ ParticleSystem::ParticleSystem(const Camera& camera)
 
 	m_currentReadBuffer = 0;
 	m_currentNumberOfParticles = 1;
+	m_currentNumberOfGeneratorParticles = 1;
 
 	// Set non-changing generation data
 	m_updateShader.activate();

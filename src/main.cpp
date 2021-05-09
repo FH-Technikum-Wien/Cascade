@@ -158,6 +158,15 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		++displacementSystem->RefinementSteps;
 	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
 		--displacementSystem->RefinementSteps;
+
+	if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+		camera.MovementSpeed = 0.01f;
+	if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+		camera.MovementSpeed = 0.1f;
+	if (key == GLFW_KEY_3 && action == GLFW_PRESS)
+		camera.MovementSpeed = 1.0f;
+	if (key == GLFW_KEY_4 && action == GLFW_PRESS)
+		camera.MovementSpeed = 10.0f;
 }
 #pragma endregion
 
