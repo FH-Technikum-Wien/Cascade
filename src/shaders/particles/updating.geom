@@ -4,7 +4,7 @@
 layout(points) in;
 // Return as points
 layout(points) out;
-// Limit emitted vertices to 85 (GTX 1070 TI limit)
+// Limit emitted vertices (85 isthe limit for GTX 1070 TI)
 layout(max_vertices = 40) out;
 
 // Input from vertex shader
@@ -39,6 +39,17 @@ uniform vec3 gRandomSeed;
 uniform float sTimePassed;
 
 vec3 seed;
+
+const vec3 colors[6] = {
+	vec3(1.0f, 0.0f, 0.0f),
+	vec3(1.0f, 1.0f, 0.0f),
+	vec3(1.0f, 0.0f, 1.0f),
+	vec3(0.0f, 1.0f, 0.0f),
+	vec3(0.0f, 1.0f, 1.0f),
+	vec3(0.0f, 0.0f, 1.0f),
+};
+
+
 
 /* 
 * Returns a random number between 0 and 1
@@ -82,7 +93,6 @@ void main()
 		for(int i = 0; i < gNumberOfParticlesToSpawn; i++)
 		{
 			pPositionOut = gPosition;
-			pColorOut = gColor;
 			pSizeOut = gSize;
 			// Calculate random values in defined range
 			pVelocityOut = gVelocityMin + vec3(
@@ -90,6 +100,8 @@ void main()
 					gVelocityRange.y * random01(), 
 					gVelocityRange.z * random01()
 			);
+			int randomColorIndex = int(random01() * 6);
+			pColorOut = colors[randomColorIndex];
 
 			pLifetimeOut = gLifetimeMin + gLifetimeRange * random01();
 			// Define as normal particle

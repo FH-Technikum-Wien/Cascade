@@ -73,7 +73,6 @@ ParticleSystem::ParticleSystem(const Camera& camera)
 
 	m_currentReadBuffer = 0;
 	m_currentNumberOfParticles = 1;
-	m_currentNumberOfGeneratorParticles = 1;
 
 	// Set non-changing generation data
 	m_updateShader.activate();
@@ -154,7 +153,7 @@ void ParticleSystem::Render(const Camera& camera)
 {
 	SetMatrices(camera);
 
-	glEnable(GL_BLEND);
+	//glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	// Disable writing to depth buffer, particles should not overwrite depth
 	glDepthMask(0);

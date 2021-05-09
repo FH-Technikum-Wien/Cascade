@@ -54,7 +54,6 @@ private:
 
 	float m_elapsedTime = 0;
 	int m_currentNumberOfParticles = 0;
-	int m_currentNumberOfGeneratorParticles = 0;
 
 	glm::mat4 m_viewMat;
 	glm::vec3 m_quad1;
