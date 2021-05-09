@@ -28,8 +28,8 @@ public:
 	float Size = 0.5f;
 	float LifetimeMin = 1;
 	float LifetimeRange = 3;
-	float SpawnFrequence = 0.01f;
-	int NumberOfParticlesToSpawn = 1;
+	float SpawnFrequence = 0.1f;
+	int NumberOfParticlesToSpawn = 1000;
 
 public:
 	ParticleSystem(const Camera& camera);
@@ -46,7 +46,6 @@ private:
 	const char* PARTICLE_RENDER_GEOMETRY_SHADER = "src/shaders/particles/rendering.geom";
 	const char* PARTICLE_RENDER_FRAGMENT_SHADER = "src/shaders/particles/rendering.frag";
 
-	const int PARTICLE_HARDWARE_LIMIT = 40;
 	const int MAX_PARTICLES = 100000;
 
 	const char* BRICK_WALL_2 = "art/particle.png";

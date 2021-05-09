@@ -74,7 +74,7 @@ int main()
 	auto lastFrameTime = clock.now();
 
 	float timePressed = 0;
-	float delay = 0.5f;
+	float delay = 0.1f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -121,7 +121,7 @@ int main()
 			" | Steps: " + std::to_string(displacementSystem->Steps) +
 			" | Refinement Steps: " + std::to_string(displacementSystem->RefinementSteps) +
 			" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
-			" | Particles to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn);
+			" | Particle spawn frequency: " + std::to_string(particleSystem->SpawnFrequence);
 		glfwSetWindowTitle(window, lastInput.c_str());
 
 		// Swaps the drawn buffer with the buffer that got written to
@@ -248,9 +248,9 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		particleSystem->ParticleTypeToSpawn = ParticleSystem::ParticleType::CONFETTI;
 
 	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)
-		particleSystem->NumberOfParticlesToSpawn *= 10;
+		particleSystem->SpawnFrequence *= 2;
 	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS)
-		particleSystem->NumberOfParticlesToSpawn /= 10;
+		particleSystem->SpawnFrequence /= 2;
 }
 #pragma endregion
 
