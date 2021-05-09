@@ -11,7 +11,7 @@ void printError2()
 
 ParticleSystem::ParticleSystem(const Camera& camera)
 {
-	m_material = Material(BRICK_WALL_2, GL_RGB);
+	m_material = Material(BRICK_WALL_2, GL_RGBA);
 
 	m_updateShader.addShader(PARTICLE_UPDATE_VERTEX_SHADER, ShaderType::VERTEX_SHADER, false);
 	m_updateShader.addShader(PARTICLE_UPDATE_GEOMETRY_SHADER, ShaderType::GEOMETRY_SHADER, false);
@@ -86,12 +86,16 @@ void ParticleSystem::Update(const Camera& camera, float deltaTime)
 	m_updateShader.setVec3("gVelocityMin", VelocityMin);
 	m_updateShader.setVec3("gVelocityRange", VelocityRange);
 	m_updateShader.setVec3("gGravity", Gravity);
-	//m_updateShader.setVec3("gColor", Color);
+	m_updateShader.setVec3("gColor", Color);
 	m_updateShader.setFloat("gSize", Size);
 	m_updateShader.setFloat("gLifetimeMin", LifetimeMin);
 	m_updateShader.setFloat("gLifetimeRange", LifetimeRange);
 	m_updateShader.setFloat("sTimePassed", deltaTime);
 	m_updateShader.setInt("gNumberOfParticlesToSpawn", 0);
+	m_updateShader.setFloat("gParticleType", ParticleTypeToSpawn);
+
+	m_updateShader.setVec3("colorBlendStart", ColorBlendStart);
+	m_updateShader.setVec3("colorBlendEnd", ColorBlendEnd);
 
 	m_elapsedTime += deltaTime;
 
@@ -142,15 +146,19 @@ void ParticleSystem::Update(const Camera& camera, float deltaTime)
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 	glDisable(GL_RASTERIZER_DISCARD);
 
-	//std::cout << "Particle count: " << m_currentNumberOfParticles << std::endl;
+	std::cout << "Particle count: " << m_currentNumberOfParticles << std::endl;
 }
 
 void ParticleSystem::Render(const Camera& camera)
 {
 	SetMatrices(camera);
 
-	//glEnable(GL_BLEND);
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+
+
 	// Disable writing to depth buffer, particles should not overwrite depth
 	glDepthMask(0);
 
@@ -163,6 +171,7 @@ void ParticleSystem::Render(const Camera& camera)
 	//m_renderShader.setVec3("cameraPos", camera.Position);
 	m_renderShader.setVec3("quad1", m_quad1);
 	m_renderShader.setVec3("quad2", m_quad2);
+	m_renderShader.setFloat("maxLifetime", LifetimeMin + LifetimeRange);
 
 	// Render current read buffer (which we just wrote to)
 	glBindVertexArray(m_VAOs[m_currentReadBuffer]);

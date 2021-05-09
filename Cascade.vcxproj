@@ -195,6 +195,7 @@
     <Image Include="art\bricks2_normal.jpg" />
     <Image Include="art\brickWall.jpg" />
     <Image Include="art\brickWall_normal.jpg" />
+    <Image Include="art\particle.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

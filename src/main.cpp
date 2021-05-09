@@ -59,6 +59,11 @@ int main()
 	Shader groundShader = Shader();
 	groundShader.addShader("src/shaders/sampleShader.vert", ShaderType::VERTEX_SHADER);
 	groundShader.addShader("src/shaders/sampleShader.frag", ShaderType::FRAGMENT_SHADER);
+	groundShader.activate();
+	groundShader.setInt("diffuseTexture", 0);
+	groundShader.setInt("normalMap", 1);
+	groundShader.setMat4("projectionMat", camera.ProjectionMat);
+	groundShader.setFloat("ambientLightAmount", 1.0f);
 
 	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
 	ground = Plane(groundMat, glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(-90.0f,0.0f,0.0f), glm::vec3(10));
@@ -89,10 +94,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		groundShader.activate();
-		groundShader.setInt("diffuseTexture", 0);
-		groundShader.setInt("normalMap", 1);
-		groundShader.setMat4("projectionMat", camera.ProjectionMat);
-		groundShader.setFloat("ambientLightAmount", 1.0f);
 		groundShader.setMat4("viewMat", camera.GetViewMat());
 		groundShader.setVec3("cameraPos", camera.Position);
 		groundShader.setFloat("bumpiness", Input::Bumpiness);
@@ -118,7 +119,9 @@ int main()
 			"Bumpiness: " + std::to_string(Input::Bumpiness) +
 			" | HeightScale: " + std::to_string(displacementSystem->HeightScale) +
 			" | Steps: " + std::to_string(displacementSystem->Steps) +
-			" | Refinement Steps: " + std::to_string(displacementSystem->RefinementSteps);
+			" | Refinement Steps: " + std::to_string(displacementSystem->RefinementSteps) +
+			" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
+			" | Particles to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn);
 		glfwSetWindowTitle(window, lastInput.c_str());
 
 		// Swaps the drawn buffer with the buffer that got written to
@@ -236,6 +239,18 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		camera.MovementSpeed = 1.0f;
 	if (key == GLFW_KEY_4 && action == GLFW_PRESS)
 		camera.MovementSpeed = 10.0f;
+
+	if (key == GLFW_KEY_KP_1 && action == GLFW_PRESS)
+		particleSystem->ParticleTypeToSpawn = ParticleSystem::ParticleType::NORMAL_PARTICLE;
+	if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS)
+		particleSystem->ParticleTypeToSpawn = ParticleSystem::ParticleType::COLOR_BLEND_ON_LIFETIME;
+	if (key == GLFW_KEY_KP_3 && action == GLFW_PRESS)
+		particleSystem->ParticleTypeToSpawn = ParticleSystem::ParticleType::CONFETTI;
+
+	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)
+		particleSystem->NumberOfParticlesToSpawn *= 10;
+	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS)
+		particleSystem->NumberOfParticlesToSpawn /= 10;
 }
 #pragma endregion
 

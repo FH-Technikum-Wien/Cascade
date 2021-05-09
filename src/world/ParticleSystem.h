@@ -9,16 +9,27 @@
 class ParticleSystem
 {
 public:
+	enum ParticleType
+	{
+		GENERATOR_PARTICLE = 0,
+		NORMAL_PARTICLE = 1,
+		COLOR_BLEND_ON_LIFETIME = 2,
+		CONFETTI = 3,
+	};
+
 	glm::vec3 SpawnPosition = glm::vec3(3.0f, 0.0f, 0.0f);
-	glm::vec3 VelocityMin = glm::vec3(-1, 0, -1);
-	glm::vec3 VelocityRange = glm::vec3(1, 2, 1);
-	glm::vec3 Gravity = glm::vec3(0, -2, 0);
-	glm::vec3 Color = glm::vec3(1.0f, 1.0f, 1.0f);
-	float Size = 0.1f;
+	glm::vec3 VelocityMin = glm::vec3(-0.5f, 1, -0.5f);
+	glm::vec3 VelocityRange = glm::vec3(1, 4, 1);
+	glm::vec3 Gravity = glm::vec3(0, -0.25f, 0);
+	glm::vec3 Color = glm::vec3(1.0f, 0.05f, 0.0f);
+	glm::vec3 ColorBlendStart = glm::vec3(0.05f, 0.0f, 1.0f);
+	glm::vec3 ColorBlendEnd = glm::vec3(0.0f, 1.0f, 0.0f);
+	ParticleType ParticleTypeToSpawn = ParticleType::NORMAL_PARTICLE;
+	float Size = 0.5f;
 	float LifetimeMin = 1;
 	float LifetimeRange = 3;
-	float SpawnFrequence = 0.5f;
-	int NumberOfParticlesToSpawn = 100;
+	float SpawnFrequence = 0.01f;
+	int NumberOfParticlesToSpawn = 1;
 
 public:
 	ParticleSystem(const Camera& camera);
@@ -36,9 +47,9 @@ private:
 	const char* PARTICLE_RENDER_FRAGMENT_SHADER = "src/shaders/particles/rendering.frag";
 
 	const int PARTICLE_HARDWARE_LIMIT = 40;
-	const int MAX_PARTICLES = 1000;
+	const int MAX_PARTICLES = 100000;
 
-	const char* BRICK_WALL_2 = "art/bricks2.jpg";
+	const char* BRICK_WALL_2 = "art/particle.png";
 
 	Shader m_updateShader = Shader();
 	Shader m_renderShader = Shader();
@@ -70,12 +81,6 @@ private:
 		float Lifetime = 1;
 		float Size = 1;
 		float Type = 0;
-	};
-
-	enum ParticleType
-	{
-		GENERATOR_PARTICLE = 0,
-		NORMAL_PARTICLE = 1,
 	};
 };
 

@@ -13,6 +13,8 @@ uniform mat4 viewMat;
 uniform vec3 quad1;
 uniform vec3 quad2;
 
+uniform float maxLifetime;
+
 
 in vec3 pColorPass[];
 in float pLifetimePass[];
@@ -28,11 +30,13 @@ void main()
 	if(pTypePass[0] != 0.0)
 	{
 		vec3 oldPos = gl_in[0].gl_Position.xyz;
-		float size = pSizePass[0];
+		
 		mat4 viewProjMat = projectionMat * viewMat;
 		
 		// Fade out particles depending on lifetime
 		Color = vec4(pColorPass[0], pLifetimePass[0]);
+		// Decrease size depending on lifetime
+		float size = pSizePass[0] * pLifetimePass[0] / maxLifetime;
 
 		// Generate first vertex
 		vec3 pos = oldPos + (-quad1 - quad2) * size;

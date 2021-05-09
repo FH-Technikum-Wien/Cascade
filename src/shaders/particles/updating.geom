@@ -34,6 +34,11 @@ uniform float gLifetimeMin;
 uniform float gLifetimeRange;
 uniform int gNumberOfParticlesToSpawn;
 uniform vec3 gRandomSeed;
+uniform float gParticleType;
+
+// Extra
+uniform vec3 colorBlendStart;
+uniform vec3 colorBlendEnd;
 
 // System time that has passed
 uniform float sTimePassed;
@@ -100,12 +105,24 @@ void main()
 					gVelocityRange.y * random01(), 
 					gVelocityRange.z * random01()
 			);
-			int randomColorIndex = int(random01() * 6);
-			pColorOut = colors[randomColorIndex];
+
+			if(gParticleType == 1.0) // Basic
+			{
+				pColorOut = gColor;
+			}
+			else if(gParticleType == 2.0) // Color blend on lifetime
+			{
+				pColorOut = mix(colorBlendEnd, colorBlendStart, pLifetimeOut / (gLifetimeMin + gLifetimeRange));
+			}
+			else if(gParticleType == 3.0) // Confetti
+			{
+				int randomColorIndex = int(random01() * 6);
+				pColorOut = colors[randomColorIndex];
+			}
 
 			pLifetimeOut = gLifetimeMin + gLifetimeRange * random01();
 			// Define as normal particle
-			pTypeOut = 1.0;
+			pTypeOut = gParticleType;
 
 			// Emit new particle
 			EmitVertex();
@@ -114,6 +131,10 @@ void main()
 	}
 	else if(pLifetimeOut > 0.0)
 	{
+		if(pTypeOut == 2.0)
+		{
+			pColorOut = mix(colorBlendEnd, colorBlendStart, pLifetimeOut / (gLifetimeMin + gLifetimeRange));
+		}
 		// If particle has life time remaining, emit it
 		EmitVertex();
 		EndPrimitive();

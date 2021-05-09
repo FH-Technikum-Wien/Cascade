@@ -115,5 +115,8 @@
     <Image Include="art\bricks2_normal.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="art\particle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
