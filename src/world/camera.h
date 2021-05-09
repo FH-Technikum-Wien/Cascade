@@ -19,9 +19,12 @@ class Camera
 {
 public:
 
-	explicit Camera(glm::vec3 position, float movementSpeed) : Position(position), MovementSpeed(movementSpeed) {}
+	explicit Camera(float screenWidth, float screenHeight, glm::vec3 position, float movementSpeed) : Position(position), MovementSpeed(movementSpeed)
+	{
+		ProjectionMat = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.1f, 1000.0f);
+	}
 
-	glm::mat4 GetViewMat()
+	glm::mat4 GetViewMat() const
 	{
 		glm::mat4 lookAt = glm::lookAt(Position, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 		return glm::inverse(glm::translate(transform, Position) * glm::mat4_cast(Orientation));
@@ -64,6 +67,7 @@ public:
 	}
 
 public:
+	glm::mat4 ProjectionMat = glm::mat4(1);
 	glm::vec3 Position = glm::vec3(0.0f);
 	glm::quat Orientation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
 	float MovementSpeed = 1.0f;

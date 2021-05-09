@@ -91,27 +91,27 @@ public:
 
 	void setBool(const std::string& name, bool value) const
 	{
-		glUniform1i(glGetUniformLocation(shaderProgramID, name.c_str()), (int)value);
+		glUniform1i(getUniformLocation(name.c_str()), (int)value);
 	}
 	void setInt(const std::string& name, int value) const
 	{
-		glUniform1i(glGetUniformLocation(shaderProgramID, name.c_str()), value);
+		glUniform1i(getUniformLocation(name.c_str()), value);
 	}
 	void setFloat(const std::string& name, float value) const
 	{
-		glUniform1f(glGetUniformLocation(shaderProgramID, name.c_str()), value);
+		glUniform1f(getUniformLocation(name.c_str()), value);
 	}
 	void setVec3(const std::string& name, glm::vec3 value) const
 	{
-		glUniform3fv(glGetUniformLocation(shaderProgramID, name.c_str()), 1, glm::value_ptr(value));
+		glUniform3fv(getUniformLocation(name.c_str()), 1, glm::value_ptr(value));
 	}
 	void setVec4(const std::string& name, glm::vec4 value) const
 	{
-		glUniform3fv(glGetUniformLocation(shaderProgramID, name.c_str()), 1, glm::value_ptr(value));
+		glUniform3fv(getUniformLocation(name.c_str()), 1, glm::value_ptr(value));
 	}
 	void setMat4(const std::string& name, glm::mat4 value) const
 	{
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+		glUniformMatrix4fv(getUniformLocation(name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 	}
 
 	static std::string readFile(const char* filePath)
@@ -132,5 +132,15 @@ public:
 		fileStream.close();
 
 		return fileStringStream.str();
+	}
+private:
+	GLint getUniformLocation(const std::string& name) const
+	{
+		GLint location = glGetUniformLocation(shaderProgramID, name.c_str());
+		if (location == -1)
+		{
+			std::cout << "Invalid uniform location: " + name << std::endl;;
+		}
+		return location;
 	}
 };

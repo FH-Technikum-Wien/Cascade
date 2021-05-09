@@ -9,11 +9,11 @@ layout(max_vertices = 4) out;
 
 uniform mat4 projectionMat;
 uniform mat4 viewMat;
+uniform vec3 cameraPos;
 
 uniform vec3 quad1;
 uniform vec3 quad2;
 
-uniform vec3 cameraPos;
 
 in vec3 pColorPass[];
 in float pLifetimePass[];
@@ -26,9 +26,9 @@ flat out vec4 Color;
 
 void main()
 {
-	if(pTypePass[0] != 0)
+	if(pTypePass[0] != 0.0)
 	{
-		vec3 oldPos = gl_in[0].gl_Position.xyz - cameraPos;
+		vec3 oldPos = gl_in[0].gl_Position.xyz;
 		float size = pSizePass[0];
 		mat4 viewProjMat = projectionMat * viewMat;
 		

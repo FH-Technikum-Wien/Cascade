@@ -64,18 +64,16 @@ void main()
 	pPositionOut = pPositionPass[0];
 	pVelocityOut = pVelocityPass[0];
 	pColorOut = pColorPass[0];
-	pLifetimeOut = pLifetimePass[0];
+	// Update life time
+	pLifetimeOut = pLifetimePass[0] - sTimePassed;
 	pSizeOut = pSizePass[0];
 	pTypeOut = pTypePass[0];
 
 	// Apply physics if it's a normal particle
-	pPositionOut += pVelocityOut * sTimePassed * pTypeOut;
-	pVelocityOut += gGravity * sTimePassed * pTypeOut;
+	if(pTypeOut != 0.0) pPositionOut += pVelocityOut * sTimePassed;
+	if(pTypeOut != 0.0) pVelocityOut += gGravity * sTimePassed;
 
-	// Update life time
-	pLifetimeOut -= sTimePassed;
-
-	if(pTypeOut == 0)
+	if(pTypeOut == 0.0)
 	{
 		// Always emit generator particle
 		EmitVertex();
@@ -87,17 +85,22 @@ void main()
 			pColorOut = gColor;
 			pSizeOut = gSize;
 			// Calculate random values in defined range
-			pVelocityOut = gVelocityMin + vec3(gVelocityRange.x * random01(), gVelocityRange.y * random01(), gVelocityRange.z * random01());
+			pVelocityOut = gVelocityMin + vec3(
+					gVelocityRange.x * random01(), 
+					gVelocityRange.y * random01(), 
+					gVelocityRange.z * random01()
+			);
+
 			pLifetimeOut = gLifetimeMin + gLifetimeRange * random01();
 			// Define as normal particle
-			pTypeOut = 1;
+			pTypeOut = 1.0;
 
 			// Emit new particle
 			EmitVertex();
 			EndPrimitive();
 		}
 	}
-	else if(pLifetimeOut > 0.0)
+	else if(pLifetimeOut > -0.1)
 	{
 		// If particle has life time remaining, emit it
 		EmitVertex();

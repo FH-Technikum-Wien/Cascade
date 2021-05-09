@@ -153,6 +153,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\objects\Plane.cpp" />
+    <ClCompile Include="src\world\DisplacementSystem.cpp" />
+    <ClCompile Include="src\world\ProceduralSystem.cpp" />
     <ClCompile Include="src\objects\Material.cpp" />
     <ClCompile Include="src\world\ParticleSystem.cpp" />
     <ClCompile Include="src\util\Random.cpp" />
@@ -170,6 +173,8 @@
     <Library Include="opengl\lib\libglfw3dll.a" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\world\DisplacementSystem.h" />
+    <ClInclude Include="src\world\ProceduralSystem.h" />
     <ClInclude Include="src\world\ParticleSystem.h" />
     <ClInclude Include="src\objects\Plane.h" />
     <ClInclude Include="src\objects\Material.h" />

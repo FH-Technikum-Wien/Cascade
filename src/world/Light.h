@@ -22,7 +22,7 @@ public:
 		this->intensity = intensity;
 	}
 
-	void activateLight(Shader& shader)
+	void activateLight(Shader& shader) const
 	{
 		shader.activate();
 		shader.setFloat("lightIntensity", intensity);

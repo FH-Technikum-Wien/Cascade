@@ -9,27 +9,26 @@ void printError2()
 	}
 }
 
-ParticleSystem::ParticleSystem(const Shader& updateShader, const Shader& renderShader, Material material)
+ParticleSystem::ParticleSystem(const Camera& camera)
 {
-	m_material = material;
+	m_updateShader.addShader(PARTICLE_UPDATE_VERTEX_SHADER, ShaderType::VERTEX_SHADER, false);
+	m_updateShader.addShader(PARTICLE_UPDATE_GEOMETRY_SHADER, ShaderType::GEOMETRY_SHADER, false);
 
 	// Define which attributes should be recorded by the transform feedback
-	const char* attributes[6] =
-	{
-		"pPositionOut",
-		"pVelocityOut",
-		"pColorOut",
-		"pLifetimeOut",
-		"pSizeOut",
-		"pTypeOut",
+	const char* attributes[6] = { "pPositionOut", "pVelocityOut", "pColorOut", "pLifetimeOut", "pSizeOut", "pTypeOut",
 	};
 
 	for (int i = 0; i < 6; i++)
 	{
-		glTransformFeedbackVaryings(updateShader.shaderProgramID, 6, attributes, GL_INTERLEAVED_ATTRIBS);
+		glTransformFeedbackVaryings(m_updateShader.shaderProgramID, 6, attributes, GL_INTERLEAVED_ATTRIBS);
 	}
 
-	updateShader.linkProgram();
+	m_updateShader.linkProgram();
+
+	m_renderShader.addShader(PARTICLE_RENDER_VERTEX_SHADER, ShaderType::VERTEX_SHADER, false);
+	m_renderShader.addShader(PARTICLE_RENDER_GEOMETRY_SHADER, ShaderType::GEOMETRY_SHADER, false);
+	m_renderShader.addShader(PARTICLE_RENDER_FRAGMENT_SHADER, ShaderType::FRAGMENT_SHADER, false);
+	m_renderShader.linkProgram();
 
 	glGenTransformFeedbacks(1, &m_transformFeedbackBuffer);
 	glGenQueries(1, &m_query);
@@ -51,22 +50,22 @@ ParticleSystem::ParticleSystem(const Shader& updateShader, const Shader& renderS
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Particle), &particle);
 
 		// Position
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)0);
 		glEnableVertexAttribArray(0);
 		// Velocity
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)12);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)12);
 		glEnableVertexAttribArray(1);
 		// Color
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)24);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)24);
 		glEnableVertexAttribArray(2);
 		// Lifetime
-		glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)36);
+		glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)36);
 		glEnableVertexAttribArray(3);
 		// Size
-		glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)40);
+		glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)40);
 		glEnableVertexAttribArray(4);
 		// IsParticle
-		glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)44);
+		glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)44);
 		glEnableVertexAttribArray(5);
 	}
 
@@ -74,24 +73,27 @@ ParticleSystem::ParticleSystem(const Shader& updateShader, const Shader& renderS
 	m_currentNumberOfParticles = 1;
 
 	// Set non-changing generation data
-	updateShader.activate();
-	updateShader.setVec3("gPosition", SpawnPosition);
-	updateShader.setVec3("gVelocityMin", VelocityMin);
-	updateShader.setVec3("gVelocityRange", VelocityRange);
-	updateShader.setVec3("gGravity", Gravity);
-	updateShader.setVec3("gColor", Color);
-	updateShader.setFloat("gSize", Size);
-	updateShader.setFloat("gLifetimeMin", LifetimeMin);
-	updateShader.setFloat("gLifetimeRange", LifetimeRange);	
+	m_updateShader.activate();
+	m_updateShader.setVec3("gPosition", SpawnPosition);
+	m_updateShader.setVec3("gVelocityMin", VelocityMin);
+	m_updateShader.setVec3("gVelocityRange", VelocityRange);
+	m_updateShader.setVec3("gGravity", Gravity);
+	m_updateShader.setVec3("gColor", Color);
+	m_updateShader.setFloat("gSize", Size);
+	m_updateShader.setFloat("gLifetimeMin", LifetimeMin);
+	m_updateShader.setFloat("gLifetimeRange", LifetimeRange);
 
-	renderShader.linkProgram();
+	m_renderShader.activate();
+	m_renderShader.setMat4("projectionMat", camera.ProjectionMat);
 }
 
-void ParticleSystem::Update(const Shader& updateShader, float deltaTime)
+void ParticleSystem::Update(const Camera& camera, float deltaTime)
 {
-	updateShader.activate();
-	updateShader.setFloat("sTimePassed", deltaTime);
-	updateShader.setInt("gNumberOfParticlesToSpawn", 0);
+	//std::cout << "DeltaTime: " << deltaTime << std::endl;
+
+	m_updateShader.activate();
+	m_updateShader.setFloat("sTimePassed", deltaTime);
+	m_updateShader.setInt("gNumberOfParticlesToSpawn", 0);
 
 	m_elapsedTime += deltaTime;
 
@@ -99,9 +101,9 @@ void ParticleSystem::Update(const Shader& updateShader, float deltaTime)
 	if (m_elapsedTime > SpawnFrequence)
 	{
 		m_elapsedTime -= SpawnFrequence;
-		updateShader.setInt("gNumberOfParticlesToSpawn", NumberOfParticlesToSpawn);
-		glm::vec3 randomSeed = glm::vec3(random.Xorshf96_01() * 30, random.Xorshf96_01() * 30, random.Xorshf96_01() * 30);
-		updateShader.setVec3("gRandomSeed", randomSeed);
+		m_updateShader.setInt("gNumberOfParticlesToSpawn", NumberOfParticlesToSpawn);
+		glm::vec3 randomSeed = glm::vec3(random.Xorshf96_01() * 30 - 10, random.Xorshf96_01() * 30 - 10, random.Xorshf96_01() * 30 - 10);
+		m_updateShader.setVec3("gRandomSeed", randomSeed);
 	}
 
 	// Disable graphical output. We only want to update the particles, not render them
@@ -135,6 +137,8 @@ void ParticleSystem::Update(const Shader& updateShader, float deltaTime)
 	// Get result of query and save it in m_currentNumberOfParticles
 	glGetQueryObjectiv(m_query, GL_QUERY_RESULT, &m_currentNumberOfParticles);
 
+	std::cout << "Particle count: " << m_currentNumberOfParticles << std::endl;
+
 	// Swap read and write buffers for next iteration
 	m_currentReadBuffer = 1 - m_currentReadBuffer;
 
@@ -143,23 +147,24 @@ void ParticleSystem::Update(const Shader& updateShader, float deltaTime)
 	glDisable(GL_RASTERIZER_DISCARD);
 }
 
-void ParticleSystem::Render(const Shader& renderShader)
+void ParticleSystem::Render(const Camera& camera)
 {
+	SetMatrices(camera);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	// Disable writing to depth buffer, particles should not overwrite depth
 	glDepthMask(0);
 
-
 	// Add texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_material.texture);
 
-	renderShader.activate();
-	renderShader.setMat4("projectionMat", m_projectionMat);
-	renderShader.setMat4("viewMat", m_viewMat);
-	renderShader.setVec3("quad1", m_quad1);
-	renderShader.setVec3("quad2", m_quad2);
+	m_renderShader.activate();
+	m_renderShader.setMat4("viewMat", m_viewMat);
+	//m_renderShader.setVec3("cameraPos", camera.Position);
+	m_renderShader.setVec3("quad1", m_quad1);
+	m_renderShader.setVec3("quad2", m_quad2);
 
 	// Render current read buffer (which we just wrote to)
 	glBindVertexArray(m_VAOs[m_currentReadBuffer]);
@@ -172,11 +177,12 @@ void ParticleSystem::Render(const Shader& renderShader)
 	glDisable(GL_BLEND);
 }
 
-void ParticleSystem::SetMatrices(glm::mat4& projectionMat, glm::mat4 viewMat, glm::vec3 cameraDirection, glm::vec3 up)
+void ParticleSystem::SetMatrices(const Camera& camera)
 {
-	m_projectionMat = projectionMat;
-	m_viewMat = viewMat;
-	m_quad1 = glm::normalize(glm::cross(cameraDirection, up));
-	m_quad2 = glm::normalize(glm::cross(cameraDirection, m_quad1));
+	m_viewMat = camera.GetViewMat();
+	glm::vec3 forward = glm::mat4_cast(camera.Orientation) * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+	glm::vec3 up = glm::mat4_cast(camera.Orientation) * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+	m_quad1 = glm::normalize(glm::cross(forward, up));
+	m_quad2 = glm::normalize(glm::cross(forward, m_quad1));
 
 }
