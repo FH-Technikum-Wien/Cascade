@@ -9,7 +9,6 @@ layout(max_vertices = 4) out;
 
 uniform mat4 projectionMat;
 uniform mat4 viewMat;
-uniform vec3 cameraPos;
 
 uniform vec3 quad1;
 uniform vec3 quad2;

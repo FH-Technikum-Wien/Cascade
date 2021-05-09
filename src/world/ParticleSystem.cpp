@@ -75,25 +75,21 @@ ParticleSystem::ParticleSystem(const Camera& camera)
 	m_currentNumberOfParticles = 1;
 
 	// Set non-changing generation data
-	m_updateShader.activate();
-	m_updateShader.setVec3("gPosition", SpawnPosition);
-	m_updateShader.setVec3("gVelocityMin", VelocityMin);
-	m_updateShader.setVec3("gVelocityRange", VelocityRange);
-	m_updateShader.setVec3("gGravity", Gravity);
-	m_updateShader.setVec3("gColor", Color);
-	m_updateShader.setFloat("gSize", Size);
-	m_updateShader.setFloat("gLifetimeMin", LifetimeMin);
-	m_updateShader.setFloat("gLifetimeRange", LifetimeRange);
-
 	m_renderShader.activate();
 	m_renderShader.setMat4("projectionMat", camera.ProjectionMat);
 }
 
 void ParticleSystem::Update(const Camera& camera, float deltaTime)
 {
-	//std::cout << "DeltaTime: " << deltaTime << std::endl;
-
 	m_updateShader.activate();
+	m_updateShader.setVec3("gPosition", SpawnPosition);
+	m_updateShader.setVec3("gVelocityMin", VelocityMin);
+	m_updateShader.setVec3("gVelocityRange", VelocityRange);
+	m_updateShader.setVec3("gGravity", Gravity);
+	//m_updateShader.setVec3("gColor", Color);
+	m_updateShader.setFloat("gSize", Size);
+	m_updateShader.setFloat("gLifetimeMin", LifetimeMin);
+	m_updateShader.setFloat("gLifetimeRange", LifetimeRange);
 	m_updateShader.setFloat("sTimePassed", deltaTime);
 	m_updateShader.setInt("gNumberOfParticlesToSpawn", 0);
 
@@ -139,14 +135,14 @@ void ParticleSystem::Update(const Camera& camera, float deltaTime)
 	// Get result of query and save it in m_currentNumberOfParticles
 	glGetQueryObjectiv(m_query, GL_QUERY_RESULT, &m_currentNumberOfParticles);
 
-	std::cout << "Particle count: " << m_currentNumberOfParticles << std::endl;
-
 	// Swap read and write buffers for next iteration
 	m_currentReadBuffer = 1 - m_currentReadBuffer;
 
 	// Unbind transform feedback
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 	glDisable(GL_RASTERIZER_DISCARD);
+
+	//std::cout << "Particle count: " << m_currentNumberOfParticles << std::endl;
 }
 
 void ParticleSystem::Render(const Camera& camera)

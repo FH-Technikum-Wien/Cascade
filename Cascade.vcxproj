@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\intersection\KdTree.cpp" />
     <ClCompile Include="src\objects\Plane.cpp" />
     <ClCompile Include="src\world\DisplacementSystem.cpp" />
     <ClCompile Include="src\world\ProceduralSystem.cpp" />
@@ -173,6 +174,8 @@
     <Library Include="opengl\lib\libglfw3dll.a" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\intersection\KdTree.h" />
+    <ClInclude Include="src\intersection\Structures.h" />
     <ClInclude Include="src\world\DisplacementSystem.h" />
     <ClInclude Include="src\world\ProceduralSystem.h" />
     <ClInclude Include="src\world\ParticleSystem.h" />

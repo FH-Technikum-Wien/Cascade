@@ -16,6 +16,8 @@ public:
 	int Steps = 10;
 	int RefinementSteps = 1;
 
+	Plane plane;
+
 private:
 	const char* VERTEX_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.vert";
 	const char* FRAGMENT_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.frag";
@@ -25,6 +27,6 @@ private:
 	const char* BRICK_WALL_2_DISPLACEMENT = "art/bricks2_disp.jpg";
 
 	Shader shader = Shader();
-	Plane plane;
+	
 };
 

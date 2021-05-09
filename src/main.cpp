@@ -15,6 +15,7 @@
 #include "world/ProceduralSystem.h"
 #include "world/DisplacementSystem.h"
 #include "world/ParticleSystem.h"
+#include "intersection/KdTree.h"
 
 // Defines the glfw window size
 #define SCREEN_WIDTH 1920.0f
@@ -30,7 +31,12 @@ ProceduralSystem* proceduralSystem;
 DisplacementSystem* displacementSystem;
 ParticleSystem* particleSystem;
 
+KdTree* kdTree;
+
 void setupGLFW();
+void setupKdTree();
+
+void HandleMouseClick();
 
 void mousePositionCallback(GLFWwindow* window, double xPos, double yPos);
 void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -45,12 +51,18 @@ int main()
 {
 	setupGLFW();
 
+
 	proceduralSystem = new ProceduralSystem(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
 	displacementSystem = new DisplacementSystem(camera, light);
 	particleSystem = new ParticleSystem(camera);
 
+	setupKdTree();
+
 	std::chrono::high_resolution_clock clock;
 	auto lastFrameTime = clock.now();
+
+	float timePressed = 0;
+	float delay = 0.5f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -77,6 +89,12 @@ int main()
 
 		// Handle iput
 		Input::ProcessContinuousInput(window, &camera);
+
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS && timePressed + delay < glfwGetTime())
+		{
+			timePressed = glfwGetTime();
+			HandleMouseClick();
+		}
 
 
 		std::string lastInput =
@@ -131,6 +149,40 @@ void setupGLFW()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
+}
+
+void setupKdTree()
+{
+	// Kd-Tree
+	std::cout << "\n[*] Building kd-tree (slow)" << std::endl;
+	auto start = std::chrono::high_resolution_clock::now();
+	kdTree = new KdTree(displacementSystem->plane.vertices, 6);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << "[->] Done!" << std::endl;
+	std::cout << "Building time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " microseconds." << std::endl;
+	kdTree->printStatistics();
+}
+
+void HandleMouseClick()
+{
+	KdStructs::Vector position = KdStructs::Vector(camera.Position.x, camera.Position.y, camera.Position.z);
+	glm::vec3 directionVector = camera.Orientation * glm::vec3(0, 0, -1);
+	// Normalize
+	directionVector = glm::normalize(directionVector);
+	KdStructs::Vector direction = KdStructs::Vector(directionVector.x, directionVector.y, directionVector.z);
+
+	// Cast ray into scene
+	KdStructs::RayHit* hit = nullptr;
+
+	std::cout << "\n[*] Casting Ray." << std::endl;
+	auto start = std::chrono::high_resolution_clock::now();
+	kdTree->raycast(KdStructs::Ray(position, direction, 1000), hit);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << "Raycast time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " microseconds." << std::endl;
+	std::cout << std::endl;
+
+	if (hit != nullptr)
+		particleSystem->SpawnPosition = glm::vec3(hit->position[0], hit->position[1], hit->position[2]);
 }
 
 #pragma region Input
