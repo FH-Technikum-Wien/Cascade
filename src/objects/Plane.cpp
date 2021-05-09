@@ -1,6 +1,7 @@
 #include "Plane.h"
 #include <glm/gtx/transform.hpp>
 
+
 Plane::Plane(Material material, glm::vec3 position, glm::vec3 eulerAngles, glm::vec3 scale)
 {
 	translate(position);
@@ -50,19 +51,19 @@ void Plane::Render(const Shader& shader, bool wireframeMode)
 	// Add texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, material.texture);
-
+	
 	// Add normalMap
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, material.normalMap);
-
+	
 	// Add displacement
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, material.displacementMap);
-
+	
 	// Set render mode to wireframe
 	if (wireframeMode)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+	
 	glBindVertexArray(VAO);
 	shader.setMat4("modelMat", transform);
 	shader.setFloat("ambientStrength", material.ambientStrength);
@@ -70,12 +71,28 @@ void Plane::Render(const Shader& shader, bool wireframeMode)
 	shader.setFloat("specularStrength", material.specularStrength);
 	shader.setFloat("focus", material.focus);
 	shader.setVec3("textureColor", material.color);
-
+	
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_VERTICES);
 	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-
+	
 	// Reset render mode
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+float* Plane::GetVerticesInWorldSpace()
+{
+	float* worldVertices = new float[vertexCount * 3];
+	for (int i = 0; i < vertexCount; i++)
+	{
+		int index = i * 3;
+
+		glm::vec3 localPos = glm::vec3(vertices[index], vertices[index + 1], vertices[index + 2]);
+		glm::vec4 worldPos = transform * glm::vec4(localPos, 1);
+		worldVertices[index] = worldPos.x;
+		worldVertices[index + 1] = worldPos.y;
+		worldVertices[index + 2] = worldPos.z;
+	}
+	return worldVertices;
 }
 
 void Plane::initialize()

@@ -22,6 +22,8 @@ public:
 
 	void Render(const Shader& shader, bool wireframeMode);
 
+	float* GetVerticesInWorldSpace();
+
 private:
 	unsigned int VAO = 0;
 	unsigned int EBO = 0;

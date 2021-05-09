@@ -31,6 +31,7 @@ ProceduralSystem* proceduralSystem;
 DisplacementSystem* displacementSystem;
 ParticleSystem* particleSystem;
 
+Plane ground;
 KdTree* kdTree;
 
 void setupGLFW();
@@ -51,10 +52,16 @@ int main()
 {
 	setupGLFW();
 
-
 	proceduralSystem = new ProceduralSystem(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
 	displacementSystem = new DisplacementSystem(camera, light);
 	particleSystem = new ParticleSystem(camera);
+
+	Shader groundShader = Shader();
+	groundShader.addShader("src/shaders/sampleShader.vert", ShaderType::VERTEX_SHADER);
+	groundShader.addShader("src/shaders/sampleShader.frag", ShaderType::FRAGMENT_SHADER);
+
+	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
+	ground = Plane(groundMat, glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(-90.0f,0.0f,0.0f), glm::vec3(10));
 
 	setupKdTree();
 
@@ -80,6 +87,16 @@ int main()
 		glClearColor(0.2f, 0.4f, 0.4f, 1.0f);
 		// Clear color buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		groundShader.activate();
+		groundShader.setInt("diffuseTexture", 0);
+		groundShader.setInt("normalMap", 1);
+		groundShader.setMat4("projectionMat", camera.ProjectionMat);
+		groundShader.setFloat("ambientLightAmount", 1.0f);
+		groundShader.setMat4("viewMat", camera.GetViewMat());
+		groundShader.setVec3("cameraPos", camera.Position);
+		groundShader.setFloat("bumpiness", Input::Bumpiness);
+		ground.Render(groundShader, false);
 
 		proceduralSystem->Update(camera);
 		displacementSystem->Update(camera, false);
@@ -156,7 +173,7 @@ void setupKdTree()
 	// Kd-Tree
 	std::cout << "\n[*] Building kd-tree (slow)" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
-	kdTree = new KdTree(displacementSystem->plane.vertices, 6);
+	kdTree = new KdTree(ground.GetVerticesInWorldSpace(), 6);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << "[->] Done!" << std::endl;
 	std::cout << "Building time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " microseconds." << std::endl;
