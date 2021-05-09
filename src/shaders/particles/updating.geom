@@ -45,6 +45,8 @@ uniform float sTimePassed;
 
 vec3 seed;
 
+in int gl_PrimitiveIDIn;
+
 const vec3 colors[6] = {
 	vec3(1.0f, 0.0f, 0.0f),
 	vec3(1.0f, 1.0f, 0.0f),
@@ -74,7 +76,8 @@ float random01()
 
 void main()
 {
-	seed = gRandomSeed;
+	// Give generators different seeds
+	seed = gRandomSeed + gRandomSeed * gl_PrimitiveIDIn;
 
 	// Update values
 	pPositionOut = pPositionPass[0];

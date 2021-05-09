@@ -29,7 +29,7 @@ public:
 	float LifetimeMin = 1;
 	float LifetimeRange = 3;
 	float SpawnFrequence = 0.1f;
-	int NumberOfParticlesToSpawn = 1000;
+	int NumberOfParticlesToSpawn = 40;
 
 public:
 	ParticleSystem(const Camera& camera);
@@ -47,6 +47,7 @@ private:
 	const char* PARTICLE_RENDER_FRAGMENT_SHADER = "src/shaders/particles/rendering.frag";
 
 	const int MAX_PARTICLES = 100000;
+	const int SHADER_MAX_PARTICLES = 40;
 
 	const char* BRICK_WALL_2 = "art/particle.png";
 
@@ -64,6 +65,7 @@ private:
 
 	float m_elapsedTime = 0;
 	int m_currentNumberOfParticles = 0;
+	int m_currentNumberOfGenerators = 0;
 
 	glm::mat4 m_viewMat;
 	glm::vec3 m_quad1;

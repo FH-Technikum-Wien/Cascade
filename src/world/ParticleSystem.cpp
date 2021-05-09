@@ -66,13 +66,17 @@ ParticleSystem::ParticleSystem(const Camera& camera)
 		// Size
 		glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)40);
 		glEnableVertexAttribArray(4);
-		// IsParticle
+		// ParticleType
+		glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)44);
+		glEnableVertexAttribArray(5);
+		// ParticleType
 		glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)44);
 		glEnableVertexAttribArray(5);
 	}
 
 	m_currentReadBuffer = 0;
 	m_currentNumberOfParticles = 1;
+	m_currentNumberOfGenerators = 1;
 
 	// Set non-changing generation data
 	m_renderShader.activate();
@@ -102,6 +106,23 @@ void ParticleSystem::Update(const Camera& camera, float deltaTime)
 	// Spawn in defined time steps
 	if (m_elapsedTime > SpawnFrequence)
 	{
+		// Add another generator
+		if (NumberOfParticlesToSpawn > m_currentNumberOfGenerators * SHADER_MAX_PARTICLES)
+		{
+			Particle particle;
+			particle.Type = ParticleType::GENERATOR_PARTICLE;
+
+			for (int i = 0; i < 2; i++)
+			{
+				glBindVertexArray(m_VAOs[i]);
+				glBindBuffer(GL_ARRAY_BUFFER, m_VBOs[i]);
+				// Add generator particle to both buffers
+				glBufferSubData(GL_ARRAY_BUFFER, sizeof(Particle) * m_currentNumberOfGenerators, sizeof(Particle), &particle);
+			}
+			++m_currentNumberOfParticles;
+			++m_currentNumberOfGenerators;
+		}
+
 		m_elapsedTime -= SpawnFrequence;
 		m_updateShader.setInt("gNumberOfParticlesToSpawn", NumberOfParticlesToSpawn);
 		glm::vec3 randomSeed = glm::vec3(random.Xorshf96_01() * 30 - 10, random.Xorshf96_01() * 30 - 10, random.Xorshf96_01() * 30 - 10);

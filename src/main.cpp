@@ -121,6 +121,7 @@ int main()
 			" | Steps: " + std::to_string(displacementSystem->Steps) +
 			" | Refinement Steps: " + std::to_string(displacementSystem->RefinementSteps) +
 			" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
+			" | Particle to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
 			" | Particle spawn frequency: " + std::to_string(particleSystem->SpawnFrequence);
 		glfwSetWindowTitle(window, lastInput.c_str());
 
@@ -251,6 +252,11 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		particleSystem->SpawnFrequence *= 2;
 	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS)
 		particleSystem->SpawnFrequence /= 2;
+
+	if (key == GLFW_KEY_KP_MULTIPLY && action == GLFW_PRESS)
+		particleSystem->NumberOfParticlesToSpawn *= 2;
+	if (key == GLFW_KEY_KP_DIVIDE && action == GLFW_PRESS)
+		particleSystem->NumberOfParticlesToSpawn /= 2;
 }
 #pragma endregion
 
