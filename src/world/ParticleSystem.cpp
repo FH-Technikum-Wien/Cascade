@@ -124,7 +124,7 @@ void ParticleSystem::Update(const Camera& camera, float deltaTime)
 		}
 
 		m_elapsedTime -= SpawnFrequence;
-		m_updateShader.setInt("gNumberOfParticlesToSpawn", NumberOfParticlesToSpawn);
+		m_updateShader.setInt("gNumberOfParticlesToSpawn", NumberOfParticlesToSpawn / m_currentNumberOfGenerators);
 		glm::vec3 randomSeed = glm::vec3(random.Xorshf96_01() * 30 - 10, random.Xorshf96_01() * 30 - 10, random.Xorshf96_01() * 30 - 10);
 		m_updateShader.setVec3("gRandomSeed", randomSeed);
 	}
