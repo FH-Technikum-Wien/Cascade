@@ -153,9 +153,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\objects\Cube.cpp" />
+    <ClCompile Include="src\objects\Object.cpp" />
     <ClCompile Include="src\intersection\KdTree.cpp" />
     <ClCompile Include="src\objects\Plane.cpp" />
-    <ClCompile Include="src\world\DisplacementSystem.cpp" />
     <ClCompile Include="src\world\ProceduralSystem.cpp" />
     <ClCompile Include="src\objects\Material.cpp" />
     <ClCompile Include="src\world\ParticleSystem.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="src\world\Chunk.cpp" />
     <ClCompile Include="opengl\glad\glad.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\world\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="opengl\lib\glfw3.dll" />
@@ -174,9 +176,10 @@
     <Library Include="opengl\lib\libglfw3dll.a" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\objects\Cube.h" />
+    <ClInclude Include="src\objects\Object.h" />
     <ClInclude Include="src\intersection\KdTree.h" />
     <ClInclude Include="src\intersection\Structures.h" />
-    <ClInclude Include="src\world\DisplacementSystem.h" />
     <ClInclude Include="src\world\ProceduralSystem.h" />
     <ClInclude Include="src\world\ParticleSystem.h" />
     <ClInclude Include="src\objects\Plane.h" />
@@ -188,6 +191,7 @@
     <ClInclude Include="src\world\Camera.h" />
     <ClInclude Include="src\world\Input.h" />
     <ClInclude Include="src\world\Light.h" />
+    <ClInclude Include="src\world\World.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="art\bricks2.jpg" />

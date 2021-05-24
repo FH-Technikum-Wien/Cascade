@@ -7,15 +7,16 @@
 
 #include "objects/Material.h"
 #include "objects/Plane.h"
+#include "objects/Cube.h"
 #include "world/Camera.h"
 #include "world/Input.h"
 #include "world/Chunk.h"
 #include "world/Light.h"
 
 #include "world/ProceduralSystem.h"
-#include "world/DisplacementSystem.h"
 #include "world/ParticleSystem.h"
 #include "intersection/KdTree.h"
+#include "world/World.h"
 
 // Defines the glfw window size
 #define SCREEN_WIDTH 1920.0f
@@ -23,15 +24,15 @@
 
 GLFWwindow* window = nullptr;
 Camera camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f), 0.1f);
-Light light = Light(glm::vec3(0.2f, 0.5f, 0.2f), 1.0f);
+Light light = Light(glm::vec3(-1.0f, 5.0f, 0.2f), 1.0f);
 
 bool wireframeModeActive = false;
 
+World* world;
+
 ProceduralSystem* proceduralSystem;
-DisplacementSystem* displacementSystem;
 ParticleSystem* particleSystem;
 
-Plane ground;
 KdTree* kdTree;
 
 void setupGLFW();
@@ -45,28 +46,25 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 void printError();
 
 
-
-
-
 int main()
 {
 	setupGLFW();
 
+	world = new World(camera, light, SCREEN_WIDTH, SCREEN_HEIGHT);
 	proceduralSystem = new ProceduralSystem(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
-	displacementSystem = new DisplacementSystem(camera, light);
 	particleSystem = new ParticleSystem(camera);
 
-	Shader groundShader = Shader();
-	groundShader.addShader("src/shaders/sampleShader.vert", ShaderType::VERTEX_SHADER);
-	groundShader.addShader("src/shaders/sampleShader.frag", ShaderType::FRAGMENT_SHADER);
-	groundShader.activate();
-	groundShader.setInt("diffuseTexture", 0);
-	groundShader.setInt("normalMap", 1);
-	groundShader.setMat4("projectionMat", camera.ProjectionMat);
-	groundShader.setFloat("ambientLightAmount", 1.0f);
-
 	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
-	ground = Plane(groundMat, glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(-90.0f,0.0f,0.0f), glm::vec3(10));
+	world->Add(new Cube(groundMat, glm::vec3(0.0f, -4.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(10.0f, 1.0f, 10.f)));
+
+	Material material = Material("art/bricks2.jpg", "art/bricks2_normal.jpg", "art/bricks2_disp.jpg", GL_RGB);
+	material.ambientStrength = 0.1f;
+	material.diffuseStrength = 1.0f;
+	material.specularStrength = 0.2f;
+	material.focus = 32.0f;
+	world->Add(new Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
+
+	world->Add(new Cube(material, glm::vec3(-5.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
 
 	setupKdTree();
 
@@ -93,14 +91,9 @@ int main()
 		// Clear color buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		groundShader.activate();
-		groundShader.setMat4("viewMat", camera.GetViewMat());
-		groundShader.setVec3("cameraPos", camera.Position);
-		groundShader.setFloat("bumpiness", Input::Bumpiness);
-		ground.Render(groundShader, false);
+		world->Render(wireframeModeActive);
 
 		proceduralSystem->Update(camera);
-		displacementSystem->Update(camera, false);
 
 		particleSystem->Update(camera, deltaTime);
 		particleSystem->Render(camera);
@@ -117,9 +110,9 @@ int main()
 
 		std::string lastInput =
 			"Bumpiness: " + std::to_string(Input::Bumpiness) +
-			" | HeightScale: " + std::to_string(displacementSystem->HeightScale) +
-			" | Steps: " + std::to_string(displacementSystem->Steps) +
-			" | Refinement Steps: " + std::to_string(displacementSystem->RefinementSteps) +
+			" | HeightScale: " + std::to_string(world->HeightScale) +
+			" | Steps: " + std::to_string(world->Steps) +
+			" | Refinement Steps: " + std::to_string(world->RefinementSteps) +
 			" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
 			" | Particle to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
 			" | Particle spawn frequency: " + std::to_string(particleSystem->SpawnFrequence);
@@ -175,9 +168,11 @@ void setupGLFW()
 void setupKdTree()
 {
 	// Kd-Tree
-	std::cout << "\n[*] Building kd-tree (slow)" << std::endl;
+	std::vector<float> vertices = world->GetWorldVertices();
+
+	std::cout << "\n[*] Building kd-tree" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
-	kdTree = new KdTree(ground.GetVerticesInWorldSpace(), 6);
+	kdTree = new KdTree(&vertices[0], vertices.size() / 3);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << "[->] Done!" << std::endl;
 	std::cout << "Building time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " microseconds." << std::endl;
@@ -218,19 +213,19 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		wireframeModeActive = !wireframeModeActive;
 
 	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
-		displacementSystem->HeightScale -= displacementSystem->HeightScaleSteps;
+		world->HeightScale -= world->HeightScaleSteps;
 
 	if (key == GLFW_KEY_E && action == GLFW_PRESS)
-		displacementSystem->HeightScale += displacementSystem->HeightScaleSteps;
+		world->HeightScale += world->HeightScaleSteps;
 
 	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-		++displacementSystem->Steps;
+		++world->Steps;
 	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-		--displacementSystem->Steps;
+		--world->Steps;
 	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-		++displacementSystem->RefinementSteps;
+		++world->RefinementSteps;
 	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-		--displacementSystem->RefinementSteps;
+		--world->RefinementSteps;
 
 	if (key == GLFW_KEY_1 && action == GLFW_PRESS)
 		camera.MovementSpeed = 0.01f;

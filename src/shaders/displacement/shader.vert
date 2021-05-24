@@ -15,6 +15,8 @@ out VS_OUT{
     vec3 TangentLightPos;
     vec3 TangentViewPos;
     vec3 TangentFragPos;
+    vec3 TangentNormal;
+    vec4 FragPosLightSpace;
 } vs_out;
 
 // Local to World
@@ -26,11 +28,16 @@ uniform mat4 projectionMat;
 
 uniform vec3 lightPos;
 uniform vec3 cameraPos;
+uniform mat4 lightSpaceMat;
 
 void main()
 {
-    vs_out.FragPos = vec3(modelMat * vec4(aPos, 1.0));
+    vec3 fragPos = vec3(modelMat * vec4(aPos, 1.0));
+
+    vs_out.FragPos = fragPos;
+    
     vs_out.TexCoords = aTexCoord;
+    vs_out.FragPosLightSpace = lightSpaceMat * vec4(fragPos, 1.0);
 
     // Create TBN-Vector (Tangent Bitangent Normal)
     mat3 normalMatrix = transpose(inverse(mat3(modelMat)));
@@ -44,6 +51,7 @@ void main()
     vs_out.TangentLightPos = TBN * lightPos;
     vs_out.TangentViewPos  = TBN * cameraPos;
     vs_out.TangentFragPos  = TBN * vs_out.FragPos;
+    vs_out.TangentNormal = TBN * aNormal;
 
     gl_Position = projectionMat * viewMat * modelMat * vec4(aPos, 1.0);
 }

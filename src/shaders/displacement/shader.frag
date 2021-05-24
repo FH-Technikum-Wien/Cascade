@@ -7,6 +7,8 @@ in VS_OUT{
     vec3 TangentLightPos;
     vec3 TangentViewPos;
     vec3 TangentFragPos;
+    vec3 TangentNormal;
+    vec4 FragPosLightSpace;
 } fs_in;
 
 in vec2 TexCoord;
@@ -14,6 +16,7 @@ in vec2 TexCoord;
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalMap;
 uniform sampler2D displacementMap;
+uniform sampler2D shadowMap;
 
 uniform vec3 textureColor;
 
@@ -33,6 +36,28 @@ uniform float heightScale;
 uniform int steps;
 uniform int refinementSteps;
 
+float calculateShadowAmount(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal){
+    // Transform to range between -1 and 1.
+    vec3 projectionCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // Tranform to range between 0 and 1 for depthMap.
+    projectionCoords = projectionCoords * 0.5 + 0.5;
+    
+    // If outside of far plane -> no shadow
+    if(projectionCoords.z > 1.0)
+        return 0.0;
+
+    // Get closest depth from light's perspective.
+    float closestDepth = texture(shadowMap, projectionCoords.xy).r;
+    // Get closest depth from camera's perspective.
+    float currentDepth = projectionCoords.z;
+
+    // Define bias to prevent shadow acne.
+    float bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);  
+    // Check if current is bigger and thereby in shadow.
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 cameraDirection)
 {
@@ -82,19 +107,6 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 cameraDirection)
     }
 
     return currentTexCoords;
-
-    /*
-    // Interpolate
-
-    // Get depth 
-    float afterDepth = currentDisplacementDepth - currentDepth;
-    float beforeDepth = texture(displacementMap, lastTexCoords).r - currentDepth + stepSize;
-    // Interpolate between both
-    float weigth = afterDepth / (afterDepth - beforeDepth);
-    vec2 finalTexCoords = lastTexCoords * weigth + currentTexCoords * (1.0 - weigth);
-
-    return finalTexCoords;
-    */
 }
 
 
@@ -103,18 +115,23 @@ void main()
     vec3 cameraDirection = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
     // Offset coords with ParallaxMapping
     vec2 texCoords = ParallaxMapping(fs_in.TexCoords, cameraDirection);
+
     // If outside of [0,1], discard
-    if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-        discard;
+    //if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+    //    discard;
 
-    // Get normal from normal map [0,1] and tranform to tangent space [-1,1]
-    vec3 normal = normalize(texture(normalMap, texCoords).rgb * 2.0 - 1.0);
-    normal.xy *= bumpiness;
-    normal = normalize(normal);
-
+    vec3 normal = normalize(fs_in.TangentNormal);
     vec3 lightDirection = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
     vec3 reflectionDirection = reflect(-lightDirection, normal);
     vec3 halfwayDirection = normalize(lightDirection + cameraDirection);
+
+    // Shadows
+    float shadowAmount = calculateShadowAmount(fs_in.FragPosLightSpace, lightDirection, normal);
+
+    // Get normal from normal map [0,1] and tranform to tangent space [-1,1]
+    normal = normalize(texture(normalMap, texCoords).rgb * 2.0 - 1.0);
+    normal.xy *= bumpiness;
+    normal = normalize(normal);
 
     // Main texture color
     vec3 color = texture(diffuseTexture, texCoords).rgb * textureColor;
@@ -128,6 +145,8 @@ void main()
     // SpecularLight
     vec3 specularLight = (pow(max(0.0, dot(normal, halfwayDirection)), focus) * specularStrength) * lightIntensity * lightColor;
 
-    vec3 lighting = (diffuseLight + specularLight + ambientLight);
+    
+
+    vec3 lighting = (1.0 - shadowAmount) * (diffuseLight + specularLight) + ambientLight;
     FragColor = vec4(lighting, 1.0);
 }

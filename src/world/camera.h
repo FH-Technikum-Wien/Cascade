@@ -36,6 +36,12 @@ public:
 		yOffset += (lastMousePos.y - (float)yPos) * MouseSensitivity;
 		lastMousePos = glm::vec2(xPos, yPos);
 
+		if (yOffset > 1.5f)
+			yOffset = 1.5f;
+
+		if (yOffset < -1.5f)
+			yOffset = -1.5f;
+
 		Orientation = glm::quat(glm::vec3(yOffset, xOffset, 0.0f));
 	}
 
@@ -46,22 +52,22 @@ public:
 		switch (movement)
 		{
 		case CameraMovement::FORWARD:
-			Position += Orientation * glm::vec3(0.0f, 0.0f, -1.0f) * movementSpeed;
+			Position += glm::normalize(Orientation * glm::vec3(0.0f, 0.0f, -1.0f) * glm::vec3(1.0f, 0.0f, 1.0f)) * movementSpeed;
 			break;
 		case CameraMovement::BACKWARD:
-			Position -= Orientation * glm::vec3(0.0f, 0.0f, -1.0f) * movementSpeed;
+			Position -= glm::normalize(Orientation * glm::vec3(0.0f, 0.0f, -1.0f) * glm::vec3(1.0f, 0.0f, 1.0f)) * movementSpeed;
 			break;
 		case CameraMovement::LEFT:
-			Position -= Orientation * glm::vec3(1.0f, 0.0f, 0.0f) * movementSpeed;
+			Position -= glm::normalize(Orientation * glm::vec3(1.0f, 0.0f, 0.0f)) * movementSpeed;
 			break;
 		case CameraMovement::RIGHT:
-			Position += Orientation * glm::vec3(1.0f, 0.0f, 0.0f) * movementSpeed;
+			Position += glm::normalize(Orientation * glm::vec3(1.0f, 0.0f, 0.0f)) * movementSpeed;
 			break;
 		case CameraMovement::UP:
-			Position += glm::vec3(0.0f, 1.0f, 0.0f) * movementSpeed;
+			Position += glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)) * movementSpeed;
 			break;
 		case CameraMovement::DOWN:
-			Position -= glm::vec3(0.0f, 1.0f, 0.0f) * movementSpeed;
+			Position -= glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)) * movementSpeed;
 			break;
 		}
 	}
