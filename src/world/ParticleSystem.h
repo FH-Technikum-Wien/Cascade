@@ -31,12 +31,16 @@ public:
 	float SpawnFrequence = 0.001f;
 	int NumberOfParticlesToSpawn = 1;
 
+
 public:
 	ParticleSystem(const Camera& camera);
 
 	void Update(const Camera& camera, float deltaTime);
-	void Render(const Camera& camera);
+	void Render(const Camera& camera, bool wireframeMode);
 	void SetMatrices(const Camera& camera);
+
+	int GetNumberOfParticles();
+	int GetNumberOfGenerators();
 
 private:
 	const char* PARTICLE_UPDATE_VERTEX_SHADER = "src/shaders/particles/updating.vert";

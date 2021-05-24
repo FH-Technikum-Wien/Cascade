@@ -166,13 +166,15 @@ void ParticleSystem::Update(const Camera& camera, float deltaTime)
 	// Unbind transform feedback
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 	glDisable(GL_RASTERIZER_DISCARD);
-
-	std::cout << "Particle count: " << m_currentNumberOfParticles << std::endl;
 }
 
-void ParticleSystem::Render(const Camera& camera)
+void ParticleSystem::Render(const Camera& camera, bool wireframeMode)
 {
 	SetMatrices(camera);
+
+	// Set render mode to wireframe
+	if (wireframeMode)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -203,6 +205,8 @@ void ParticleSystem::Render(const Camera& camera)
 
 	glDepthMask(1);
 	glDisable(GL_BLEND);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void ParticleSystem::SetMatrices(const Camera& camera)
@@ -213,4 +217,14 @@ void ParticleSystem::SetMatrices(const Camera& camera)
 	m_quad1 = glm::normalize(glm::cross(forward, up));
 	m_quad2 = glm::normalize(glm::cross(forward, m_quad1));
 
+}
+
+int ParticleSystem::GetNumberOfParticles()
+{
+	return m_currentNumberOfParticles;
+}
+
+int ParticleSystem::GetNumberOfGenerators()
+{
+	return m_currentNumberOfGenerators;
 }

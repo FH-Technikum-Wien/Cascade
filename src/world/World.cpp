@@ -25,8 +25,8 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 
 	/// SHADOWS
 
-	m_depthShader.addShader(VERTEX_SHADER_SHADOW, ShaderType::VERTEX_SHADER);
-	m_depthShader.addShader(FRAGMENT_SHADER_SHADOW, ShaderType::FRAGMENT_SHADER);
+	m_depthShader.addShader(VERTEX_SHADER_SHADOW_GEN, ShaderType::VERTEX_SHADER);
+	m_depthShader.addShader(FRAGMENT_SHADER_SHADOW_GEN, ShaderType::FRAGMENT_SHADER);
 
 	m_depthShader.activate();
 	// Framebuffer for rendering the depthMap.
@@ -34,10 +34,10 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 	// Create depthMap texture.
 	glGenTextures(1, &m_depthMap);
 	glBindTexture(GL_TEXTURE_2D, m_depthMap);
-	// Set resolution and only use 'DEPTH_COMPONENT', only need depth.
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_shadowTextureWidth, m_shadowTextureHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, m_shadowTextureWidth, m_shadowTextureHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// Everything outside of light frustum has depth of 1.0 -> no shadow.
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -45,11 +45,50 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	// Attach depth texture to FrameBufferObject's depth buffer.
 	glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthMap, 0);
-	// Tell OpenGL that we don't need any color.
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_depthMap, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+	/// FILTERING
+
+	m_filterShader.addShader(VERTEX_SHADER_GAUSSIAN, ShaderType::VERTEX_SHADER);
+	m_filterShader.addShader(FRAGMENT_SHADER_GAUSSIAN, ShaderType::FRAGMENT_SHADER);
+	m_filterShader.activate();
+	m_filterShader.setInt("filterTexture", 0);
+
+	// Framebuffer for rendering the depthMap.
+	glGenFramebuffers(1, &m_filterFBO);
+	// Create depthMap texture.
+	glGenTextures(1, &m_filterMap);
+	glBindTexture(GL_TEXTURE_2D, m_filterMap);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, m_shadowTextureWidth, m_shadowTextureHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	// Attach depth texture to FrameBufferObject's depth buffer.
+	glBindFramebuffer(GL_FRAMEBUFFER, m_filterFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_filterMap, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glGenVertexArrays(1, &m_filterVAO);
+	glBindVertexArray(m_filterVAO);
+
+	// Position
+	glGenBuffers(1, &m_filterVBO_Vertices);
+	glBindBuffer(GL_ARRAY_BUFFER, m_filterVBO_Vertices);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), &m_vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// UVs
+	glGenBuffers(1, &m_filterVBO_Uvs);
+	glBindBuffer(GL_ARRAY_BUFFER, m_filterVBO_Uvs);
+	glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), &m_uvs, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
 }
 
 void World::Add(Object* object)
@@ -59,26 +98,54 @@ void World::Add(Object* object)
 
 void World::Render(bool wireframeMode)
 {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Render depth of scene to depthMap texture
 	m_depthShader.activate();
 	m_depthShader.setMat4("lightSpaceMat", m_light.lightSpaceMat);
 	glViewport(0, 0, m_shadowTextureWidth, m_shadowTextureHeight);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFBO);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	// Prevent peter panning by using back-faces
-	glCullFace(GL_FRONT);
+
 	// Render world's depth
 	for (Object* object : m_objects)
 	{
 		object->RenderDepth(m_depthShader);
 	}
-	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Clear color buffer and depth buffer.
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	/// GAUSSIAN BLUR - Two way pass
+
+	m_filterShader.activate();
+	m_filterShader.setVec3("blurScale", glm::vec3(1.0f / (m_shadowTextureWidth * m_blurAmount), 0.0f, 0.0f));
+
+	// Blur x-axis
+	glBindFramebuffer(GL_FRAMEBUFFER, m_filterFBO);
+	// Bind texture to apply blur to
+	glBindTexture(GL_TEXTURE_2D, m_depthMap);
+
+	glBindVertexArray(m_filterVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); 
+	glBindVertexArray(0);
+
+	// Blur y-axis (use blured texture)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFBO);
+	m_filterShader.setVec3("blurScale", glm::vec3(0.0f, 1.0f / (m_shadowTextureHeight * m_blurAmount), 0.0f));
+	// Bind texture to apply blur to
+	glBindTexture(GL_TEXTURE_2D, m_filterMap);
+
+	glBindVertexArray(m_filterVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	// Reset
+	glBindVertexArray(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Reset viewport.
 	glViewport(0, 0, m_screenWidth, m_screenHeight);
-	// Clear color buffer and depth buffer.
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_displacementShader.activate();
 	m_displacementShader.setMat4("viewMat", m_camera.GetViewMat());

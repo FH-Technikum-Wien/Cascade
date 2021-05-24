@@ -9,7 +9,7 @@ class ProceduralSystem
 public:
 	ProceduralSystem(float screenWidth, float screenHeight, const Camera& camera);
 
-	void Update(const Camera& camera);
+	void Update(const Camera& camera, bool wireframeMode);
 
 private:
 	const char* VERTEX_SHADER_PATH = "src/shaders/procedural/shader.vert";
@@ -36,8 +36,6 @@ private:
 
 	unsigned int VAO = 0;
 	unsigned int VBO = 0;
-
-	bool wireframeModeActive = false;
 
 	// Used for rendering on each z-layer of the 3D texture
 	float rectangle[12] =

@@ -22,7 +22,7 @@ public:
 		this->color = color;
 		this->intensity = intensity;
 
-		float nearPlane = 0.001f, farPlane = 100.0f;
+		float nearPlane = 0.001f, farPlane = 50.0f;
 		glm::mat4 lightProjection;
 		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
 

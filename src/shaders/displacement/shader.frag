@@ -37,26 +37,62 @@ uniform int steps;
 uniform int refinementSteps;
 
 float calculateShadowAmount(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal){
-    // Transform to range between -1 and 1.
+    // Transform to range between -1 and 1
     vec3 projectionCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // Tranform to range between 0 and 1 for depthMap.
+    // Tranform to range between 0 and 1 for depthMap
     projectionCoords = projectionCoords * 0.5 + 0.5;
     
     // If outside of far plane -> no shadow
     if(projectionCoords.z > 1.0)
         return 0.0;
 
-    // Get closest depth from light's perspective.
+    // Get closest depth from light's perspective
     float closestDepth = texture(shadowMap, projectionCoords.xy).r;
-    // Get closest depth from camera's perspective.
+    // Get closest depth from camera's perspective
     float currentDepth = projectionCoords.z;
 
-    // Define bias to prevent shadow acne.
+    // Define bias to prevent shadow acne
     float bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);  
-    // Check if current is bigger and thereby in shadow.
+    // Check if current is bigger and thereby in shadow
     float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
     return shadow;
+}
+
+float linearStep(float low, float high, float value)
+{
+    return clamp((value - low) / (high - low), 0.0, 1.0);
+}
+
+float calculateVSMShadows(vec4 fragPosLightSpace)
+{
+    // Transform to range between -1 and 1
+    vec3 projectionCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // Tranform to range between 0 and 1 for depthMap
+    projectionCoords = projectionCoords * 0.5 + 0.5;
+    
+    // If outside of far plane -> no shadow
+    if(projectionCoords.z > 1.0)
+        return 1.0;
+    
+    // Get depth and depthSquared
+    vec2 data = texture(shadowMap, projectionCoords.xy).xy;
+    float depth = data.x;
+    float depthSquared = data.y;
+
+    float depthFromCamera = projectionCoords.z;
+    // Whether pixel is in light (1.0) or shadow (0.0)
+    float p = step(depthFromCamera, depth);
+
+    float variance = max(depthSquared - depth * depth, 0.00001);
+
+    float distanceToMean = depthFromCamera - depth;
+    float pMax = variance / (variance + distanceToMean * distanceToMean);
+
+    // Reduce light bleeding
+    pMax = linearStep(0.2, 1.0, pMax);
+
+    return min(max(p, pMax),1.0);
 }
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 cameraDirection)
@@ -109,7 +145,6 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 cameraDirection)
     return currentTexCoords;
 }
 
-
 void main()
 {
     vec3 cameraDirection = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
@@ -126,7 +161,7 @@ void main()
     vec3 halfwayDirection = normalize(lightDirection + cameraDirection);
 
     // Shadows
-    float shadowAmount = calculateShadowAmount(fs_in.FragPosLightSpace, lightDirection, normal);
+    float shadowAmount = calculateVSMShadows(fs_in.FragPosLightSpace);
 
     // Get normal from normal map [0,1] and tranform to tangent space [-1,1]
     normal = normalize(texture(normalMap, texCoords).rgb * 2.0 - 1.0);
@@ -145,8 +180,6 @@ void main()
     // SpecularLight
     vec3 specularLight = (pow(max(0.0, dot(normal, halfwayDirection)), focus) * specularStrength) * lightIntensity * lightColor;
 
-    
-
-    vec3 lighting = (1.0 - shadowAmount) * (diffuseLight + specularLight) + ambientLight;
+    vec3 lighting = (shadowAmount) * (diffuseLight + specularLight) + ambientLight;
     FragColor = vec4(lighting, 1.0);
 }

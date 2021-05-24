@@ -24,7 +24,7 @@
 
 GLFWwindow* window = nullptr;
 Camera camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f), 0.1f);
-Light light = Light(glm::vec3(-1.0f, 5.0f, 0.2f), 1.0f);
+Light light = Light(glm::vec3(-15.0f, 15.0f, 6.0f), 1.0f);
 
 bool wireframeModeActive = false;
 
@@ -55,7 +55,7 @@ int main()
 	particleSystem = new ParticleSystem(camera);
 
 	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
-	world->Add(new Cube(groundMat, glm::vec3(0.0f, -4.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(10.0f, 1.0f, 10.f)));
+	world->Add(new Cube(groundMat, glm::vec3(0.0f, -3.5f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(15.0f, 0.5f, 15.f)));
 
 	Material material = Material("art/bricks2.jpg", "art/bricks2_normal.jpg", "art/bricks2_disp.jpg", GL_RGB);
 	material.ambientStrength = 0.1f;
@@ -66,6 +66,12 @@ int main()
 
 	world->Add(new Cube(material, glm::vec3(-5.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
 
+	world->Add(new Cube(material, glm::vec3(7.0f, -1.0f, -6.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f)));
+
+	world->Add(new Cube(groundMat, glm::vec3(-2.5f, -1.5f, -6.0f), glm::vec3(0.0f, 45.0f, 45.0f), glm::vec3(0.5f)));
+
+	world->Add(new Cube(groundMat, glm::vec3(-11.0f, -2.5f, -5.0f), glm::vec3(0.0f, 45.0f, 0.0f), glm::vec3(0.5f)));
+
 	setupKdTree();
 
 	std::chrono::high_resolution_clock clock;
@@ -73,6 +79,9 @@ int main()
 
 	float timePressed = 0;
 	float delay = 0.1f;
+
+	float titleLastUpdate = 0;
+	float titleUpdateDelay = 0.2f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -93,10 +102,10 @@ int main()
 
 		world->Render(wireframeModeActive);
 
-		proceduralSystem->Update(camera);
+		proceduralSystem->Update(camera, wireframeModeActive);
 
 		particleSystem->Update(camera, deltaTime);
-		particleSystem->Render(camera);
+		particleSystem->Render(camera, wireframeModeActive);
 
 		// Handle iput
 		Input::ProcessContinuousInput(window, &camera);
@@ -107,16 +116,21 @@ int main()
 			HandleMouseClick();
 		}
 
-
-		std::string lastInput =
-			"Bumpiness: " + std::to_string(Input::Bumpiness) +
-			" | HeightScale: " + std::to_string(world->HeightScale) +
-			" | Steps: " + std::to_string(world->Steps) +
-			" | Refinement Steps: " + std::to_string(world->RefinementSteps) +
-			" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
-			" | Particle to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
-			" | Particle spawn frequency: " + std::to_string(particleSystem->SpawnFrequence);
-		glfwSetWindowTitle(window, lastInput.c_str());
+		if (titleLastUpdate + titleUpdateDelay < glfwGetTime())
+		{
+			titleLastUpdate = glfwGetTime();
+			std::string lastInput =
+				"Bumpiness: " + std::to_string(Input::Bumpiness) +
+				" | HeightScale: " + std::to_string(world->HeightScale) +
+				" | Steps: " + std::to_string(world->Steps) +
+				" | Refinement Steps: " + std::to_string(world->RefinementSteps) +
+				" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
+				" | Particle to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
+				" | Particle spawn frequency: " + std::to_string(particleSystem->SpawnFrequence) +
+				" | Particles: " + std::to_string(particleSystem->GetNumberOfParticles()) +
+				" | Generators: " + std::to_string(particleSystem->GetNumberOfGenerators());
+			glfwSetWindowTitle(window, lastInput.c_str());
+		}
 
 		// Swaps the drawn buffer with the buffer that got written to
 		glfwSwapBuffers(window);
@@ -132,7 +146,7 @@ int main()
 void setupGLFW()
 {
 	glfwInit();
-	// Tell GLFW that we're using OpenGL version 4.5
+	// Tell GLFW that we're using OpenGL version 4.6
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	// Tell GLFW to use Core_Profile -> Smaller subset without backwards-compatibility (not needed)
@@ -154,6 +168,8 @@ void setupGLFW()
 	// Set OpenGL viewport
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	glEnable(GL_DEPTH_TEST);
+
+
 	// Events
 	glfwSetCursorPosCallback(window, mousePositionCallback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
@@ -249,7 +265,12 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		particleSystem->SpawnFrequence /= 2;
 
 	if (key == GLFW_KEY_KP_MULTIPLY && action == GLFW_PRESS)
-		particleSystem->NumberOfParticlesToSpawn *= 2;
+	{
+		if (particleSystem->NumberOfParticlesToSpawn == 0)
+			++particleSystem->NumberOfParticlesToSpawn;
+		else
+			particleSystem->NumberOfParticlesToSpawn *= 2;
+	}
 	if (key == GLFW_KEY_KP_DIVIDE && action == GLFW_PRESS)
 		particleSystem->NumberOfParticlesToSpawn /= 2;
 }

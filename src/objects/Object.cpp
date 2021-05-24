@@ -50,9 +50,6 @@ void Object::RenderDepth(const Shader& shader)
 	shader.setMat4("modelMat", transform);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_VERTICES);
 	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-
-	// Reset render mode
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 std::vector<float> Object::GetVerticesInWorldSpace()

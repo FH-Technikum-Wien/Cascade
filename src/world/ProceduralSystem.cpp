@@ -21,7 +21,7 @@ ProceduralSystem::ProceduralSystem(float screenWidth, float screenHeight, const 
 	noiseShader.addShader(NOISE_FRAGMENT_SHADER_PATH, FRAGMENT_SHADER);
 
 	glGenVertexArrays(1, &VAO);
-	// Bind Vertex-Array-Cube to configure VBO(s)
+	// Bind Vertex-Array-Object to configure VBO(s)
 	glBindVertexArray(VAO);
 	// Generate Vertex-Buffer-Cube to manage memory on GPU and store vertices
 	glGenBuffers(1, &VBO);
@@ -40,7 +40,7 @@ ProceduralSystem::ProceduralSystem(float screenWidth, float screenHeight, const 
 	chunks.push_back(Chunk(chunkDimensions, TEXTURE_HEIGHT, noiseShader, VAO, screenWidth, screenHeight));
 }
 
-void ProceduralSystem::Update(const Camera& camera)
+void ProceduralSystem::Update(const Camera& camera, bool wireframeMode)
 {
 	glDisable(GL_CULL_FACE);
 
@@ -67,7 +67,7 @@ void ProceduralSystem::Update(const Camera& camera)
 
 	// Render each chunk using marching cubes 
 	for (const Chunk& chunk : chunks)
-		chunk.RenderPoints(shader, wireframeModeActive);
+		chunk.RenderPoints(shader, wireframeMode);
 
 	glEnable(GL_CULL_FACE);
 }

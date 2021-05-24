@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Light.h"
 #include "Input.h"
+#include "../objects/Plane.h"
 
 
 class World
@@ -32,8 +33,11 @@ private:
 	const char* VERTEX_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.vert";
 	const char* FRAGMENT_SHADER_DISPLACEMENT = "src/shaders/displacement/shader.frag";
 
-	const char* VERTEX_SHADER_SHADOW = "src/shaders/shadows/depthShader.vert";
-	const char* FRAGMENT_SHADER_SHADOW = "src/shaders/shadows/depthShader.frag";
+	const char* VERTEX_SHADER_SHADOW_GEN = "src/shaders/shadows/VSM/generator.vert";
+	const char* FRAGMENT_SHADER_SHADOW_GEN = "src/shaders/shadows/VSM/generator.frag";
+
+	const char* VERTEX_SHADER_GAUSSIAN = "src/shaders/filtering/gaussian.vert";
+	const char* FRAGMENT_SHADER_GAUSSIAN = "src/shaders/filtering/gaussian.frag";
 
 	const Camera& m_camera;
 	const Light& m_light;
@@ -41,13 +45,43 @@ private:
 	Shader m_displacementShader = Shader();
 	Shader m_depthShader = Shader();
 
+	Shader m_filterShader = Shader();
+	Plane filterPlane = Plane(Material(), glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f));
+
 	unsigned int m_depthMapFBO;
 	unsigned int m_depthMap;
+
+	unsigned int m_filterVAO;
+	unsigned int m_filterVBO_Vertices;
+	unsigned int m_filterVBO_Uvs;
+	unsigned int m_filterFBO;
+	unsigned int m_filterMap;
+
+	float m_vertices[12] =
+	{
+		-1.0f,  1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		
+		
+		
+	};
+
+	float m_uvs[8] =
+	{
+		 0.0f, 1.0f,
+		 0.0f, 0.0f,
+		 1.0f, 1.0f,
+		 1.0f, 0.0f,
+	};
 
 	unsigned int m_shadowTextureWidth = 1024;
 	unsigned int m_shadowTextureHeight = 1024;
 
 	unsigned int m_screenWidth = 0;
 	unsigned int m_screenHeight = 0;
+
+	float m_blurAmount = 0.5f;
 };
 
