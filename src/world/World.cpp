@@ -110,7 +110,7 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 
 
 	Material terrainMat = Material("art/bricks2.jpg", "art/bricks2_normal.jpg", "art/bricks2_disp.jpg", GL_RGB);
-	Material terrainMat2 = Material("art/terrain_diffuse.jpg", "art/terrain_normal.jpg", "art/terrain_displacement.jpg", GL_RGB);
+	Material terrainMat2 = Material("art/terrain_displacement.jpg", "art/terrain_normal.jpg", "art/terrain_displacement.jpg", GL_RGB);
 	terrainMat.ambientStrength = 0.5f;
 	terrainMat2.ambientStrength = 0.5f;
 	m_terrain = new Terrain(terrainMat, glm::vec3(-25.0f, 0.0f, 5.0f), glm::vec3(-90.0f, 0.0f, 0.0f), glm::vec3(1.0f));
