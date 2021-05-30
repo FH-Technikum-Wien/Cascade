@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Light.h"
 #include "Input.h"
+#include "../objects/Terrain.h"
 #include "../objects/Plane.h"
 
 
@@ -41,6 +42,11 @@ private:
 	const char* VERTEX_SHADER_GAUSSIAN = "src/shaders/filtering/gaussian.vert";
 	const char* FRAGMENT_SHADER_GAUSSIAN = "src/shaders/filtering/gaussian.frag";
 
+	const char* TESSELLATION_VERTEX_SHADER = "src/shaders/tessellation/shader.vert";
+	const char* TESSELLATION_CONTROL_SHADER = "src/shaders/tessellation/shader.tesc";
+	const char* TESSELLATION_EVAL_SHADER = "src/shaders/tessellation/shader.tese";
+	const char* TESSELLATION_FRAGMENT_SHADER = "src/shaders/tessellation/shader.frag";
+
 	const Camera& m_camera;
 	const Light& m_light;
 
@@ -49,6 +55,12 @@ private:
 
 	Shader m_filterShader = Shader();
 	Plane filterPlane = Plane(Material(), glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f));
+
+	Shader m_tesselationShader = Shader();
+	Terrain* m_terrain;
+	const char* WHITE_TEXTURE = "art/white.jpg";
+	const char* NORMAL_TEXTURE = "art/normal.jpg";
+	const char* TERRAIN_DISPLACEMENT = "art/landscape_displacement.jpg";
 
 	unsigned int m_depthMapFBO;
 	unsigned int m_depthMap;

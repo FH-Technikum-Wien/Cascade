@@ -88,6 +88,22 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 	glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), &m_uvs, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
+
+
+	// TESSELATION
+	m_tesselationShader.addShader(TESSELLATION_VERTEX_SHADER, ShaderType::VERTEX_SHADER);
+	m_tesselationShader.addShader(TESSELLATION_CONTROL_SHADER, ShaderType::TESS_CONTROL_SHADER);
+	m_tesselationShader.addShader(TESSELLATION_EVAL_SHADER, ShaderType::TESS_EVAL_SHADER);
+	m_tesselationShader.addShader(TESSELLATION_FRAGMENT_SHADER, ShaderType::FRAGMENT_SHADER);
+
+	m_tesselationShader.activate();
+	m_tesselationShader.setInt("diffuseTexture", 0);
+	m_tesselationShader.setInt("normalMap", 1);
+	m_tesselationShader.setInt("displacementMap", 2);
+
+
+	Material terrainMat = Material(WHITE_TEXTURE, NORMAL_TEXTURE, TERRAIN_DISPLACEMENT, GL_RGB);
+	m_terrain = new Terrain(terrainMat, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f), glm::vec3(10.0f));
 }
 
 void World::Add(Object* object)
@@ -165,6 +181,13 @@ void World::Render(bool wireframeMode)
 	{
 		object->Render(m_displacementShader, wireframeMode);
 	}
+
+	m_tesselationShader.activate();
+	m_tesselationShader.setMat4("viewMat", m_camera.GetViewMat());
+	m_tesselationShader.setVec3("cameraPos", m_camera.Position);
+	m_tesselationShader.setFloat("displacementFactor", 1.0f);
+
+	m_terrain->Render(m_tesselationShader, wireframeMode);
 }
 
 std::vector<float> World::GetWorldVertices()
