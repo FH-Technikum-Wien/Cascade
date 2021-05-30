@@ -11,8 +11,6 @@ in ES_OUT{
     vec4 FragPosLightSpace;
 } es_in;
 
-in vec2 TexCoord;
-
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalMap;
 uniform sampler2D displacementMap;
@@ -30,11 +28,6 @@ uniform float lightIntensity;
 uniform float ambientLightAmount;
 
 uniform float bumpiness;
-
-float linearStep(float low, float high, float value)
-{
-    return clamp((value - low) / (high - low), 0.0, 1.0);
-}
 
 
 void main()
