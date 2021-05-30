@@ -27,6 +27,8 @@ public:
 
 	float AmbientLight = 0.2f;
 
+	float MinVariance = 0.0001f;
+
 private:
 	std::vector<Object*> m_objects = std::vector<Object*>();
 

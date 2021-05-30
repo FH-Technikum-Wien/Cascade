@@ -36,6 +36,8 @@ uniform float heightScale;
 uniform int steps;
 uniform int refinementSteps;
 
+uniform float minVariance = 0.00001;
+
 float calculateShadowAmount(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal){
     // Transform to range between -1 and 1
     vec3 projectionCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -84,7 +86,7 @@ float calculateVSMShadows(vec4 fragPosLightSpace)
     // Whether pixel is in light (1.0) or shadow (0.0)
     float p = step(depthFromCamera, depth);
 
-    float variance = max(depthSquared - depth * depth, 0.00001);
+    float variance = max(depthSquared - depth * depth, minVariance);
 
     float distanceToMean = depthFromCamera - depth;
     float pMax = variance / (variance + distanceToMean * distanceToMean);

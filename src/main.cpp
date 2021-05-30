@@ -120,15 +120,16 @@ int main()
 		{
 			titleLastUpdate = glfwGetTime();
 			std::string lastInput =
-				"Bumpiness: " + std::to_string(Input::Bumpiness) +
-				" | HeightScale: " + std::to_string(world->HeightScale) +
-				" | Steps: " + std::to_string(world->Steps) +
-				" | Refinement Steps: " + std::to_string(world->RefinementSteps) +
-				" | Particle Mode: " + std::to_string(particleSystem->ParticleTypeToSpawn) +
-				" | Particle to spawn: " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
-				" | Particle spawn frequency: " + std::to_string(particleSystem->SpawnFrequence) +
-				" | Particles: " + std::to_string(particleSystem->GetNumberOfParticles()) +
-				" | Generators: " + std::to_string(particleSystem->GetNumberOfGenerators());
+				"Bumpiness(Wheel): " + std::to_string(Input::Bumpiness) +
+				" | HeightScale(Q,E): " + std::to_string(world->HeightScale) +
+				" | Steps(Right,Left): " + std::to_string(world->Steps) +
+				" | Refinement Steps(Up,Down): " + std::to_string(world->RefinementSteps) +
+				" | MinVariance(v,b): " + std::to_string(world->MinVariance) +
+				" | P_Mode(Num[1,2,3]): " + std::to_string(particleSystem->ParticleTypeToSpawn) +
+				" | P_To_Spawn(*,/): " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
+				" | P_Spawn_Frequency(+,-): " + std::to_string(particleSystem->SpawnFrequence) +
+				" | P_Number: " + std::to_string(particleSystem->GetNumberOfParticles()) +
+				" | PG_Number: " + std::to_string(particleSystem->GetNumberOfGenerators());
 			glfwSetWindowTitle(window, lastInput.c_str());
 		}
 
@@ -179,6 +180,13 @@ void setupGLFW()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
+
+	GLint maxPatchVertices = 0;
+	glGetIntegerv(GL_MAX_PATCH_VERTICES, &maxPatchVertices);
+	std::cout << "Maximum supported patch vertices: " << maxPatchVertices << std::endl;
+	// Size of input patch for tesselation is 3
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
+
 }
 
 void setupKdTree()
@@ -273,6 +281,11 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 	}
 	if (key == GLFW_KEY_KP_DIVIDE && action == GLFW_PRESS)
 		particleSystem->NumberOfParticlesToSpawn /= 2;
+
+	if (key == GLFW_KEY_V && action == GLFW_PRESS)
+		world->MinVariance *= 2;
+	if (key == GLFW_KEY_B && action == GLFW_PRESS)
+		world->MinVariance /= 2;
 }
 #pragma endregion
 

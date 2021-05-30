@@ -22,7 +22,6 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 	m_displacementShader.setVec3("lightColor", m_light.color);
 	m_displacementShader.setVec3("lightPos", m_light.position);
 
-
 	/// SHADOWS
 
 	m_depthShader.addShader(VERTEX_SHADER_SHADOW_GEN, ShaderType::VERTEX_SHADER);
@@ -155,6 +154,8 @@ void World::Render(bool wireframeMode)
 	m_displacementShader.setInt("steps", Steps);
 	m_displacementShader.setInt("refinementSteps", RefinementSteps);
 	m_displacementShader.setMat4("lightSpaceMat", m_light.lightSpaceMat);
+
+	m_displacementShader.setFloat("minVariance", MinVariance);
 
 	// Bind depth texture
 	glActiveTexture(GL_TEXTURE3);
