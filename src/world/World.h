@@ -61,6 +61,7 @@ private:
 
 	Shader m_tesselationShader = Shader();
 	Terrain* m_terrain;
+	Terrain* m_terrain2;
 
 	unsigned int m_depthMapFBO;
 	unsigned int m_depthMap;

@@ -151,19 +151,22 @@
     <Image Include="art\white.jpg">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="art\aerial_rocks_02_diff_1k.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="art\aerial_rocks_02_disp_1k.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="art\aerial_rocks_02_nor_1k.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="art\terrain_displacement.jpg">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="art\terrain_normal.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="art\terrain_diffuse.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="art\rocks_diffuse.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="art\rocks_displacement.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="art\rocks_normal.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

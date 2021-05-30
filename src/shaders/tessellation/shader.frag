@@ -45,7 +45,7 @@ void main()
 
     // If outside of [0,1], discard
     //if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-    //    discard;
+    //   discard;
 
     vec3 normal = normalize(es_in.TangentNormal);
     vec3 lightDirection = normalize(es_in.TangentLightPos - es_in.TangentFragPos);
