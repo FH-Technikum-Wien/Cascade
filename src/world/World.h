@@ -30,6 +30,9 @@ public:
 
 	float MinVariance = 0.0001f;
 
+	float TesselationDisplacementFactor = 1.0f;
+	float TesselationAmount = 1.0f;
+
 private:
 	std::vector<Object*> m_objects = std::vector<Object*>();
 
@@ -58,9 +61,6 @@ private:
 
 	Shader m_tesselationShader = Shader();
 	Terrain* m_terrain;
-	const char* WHITE_TEXTURE = "art/white.jpg";
-	const char* NORMAL_TEXTURE = "art/normal.jpg";
-	const char* TERRAIN_DISPLACEMENT = "art/landscape_displacement.jpg";
 
 	unsigned int m_depthMapFBO;
 	unsigned int m_depthMap;

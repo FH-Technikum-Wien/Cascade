@@ -70,11 +70,11 @@ void Terrain::Render(const Shader& shader, bool wireframeMode)
 
 	glBindVertexArray(VAO);
 	shader.setMat4("modelMat", transform);
-	//shader.setFloat("ambientStrength", material.ambientStrength);
-	//shader.setFloat("diffuseStrength", material.diffuseStrength);
-	//shader.setFloat("specularStrength", material.specularStrength);
-	//shader.setFloat("focus", material.focus);
-	//shader.setVec3("textureColor", material.color);
+	shader.setFloat("ambientStrength", material.ambientStrength);
+	shader.setFloat("diffuseStrength", material.diffuseStrength);
+	shader.setFloat("specularStrength", material.specularStrength);
+	shader.setFloat("focus", material.focus);
+	shader.setVec3("textureColor", material.color);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_VERTICES);
 	glDrawElements(GL_PATCHES, indexCount, GL_UNSIGNED_INT, 0);
@@ -119,7 +119,65 @@ void Terrain::initialize()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(2);
 
+	// TANGENTS
+	calculateTangents();
+	glGenBuffers(1, &VBO_TANGENTS);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_TANGENTS);
+	glBufferData(GL_ARRAY_BUFFER, (vertexCount * 3) * sizeof(float), tangents, GL_STATIC_DRAW);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(3);
+
 	glBindVertexArray(0);
+}
+
+void Terrain::calculateTangents()
+{
+	tangents = new float[vertexCount * 3];
+	unsigned int tangentIndex = 0;
+	for (unsigned int i = 0; i < vertexCount / 3; i++)
+	{
+		// Get vertices
+		unsigned int vertex1 = i * 9;
+		unsigned int vertex2 = i * 9 + 3;
+		unsigned int vertex3 = i * 9 + 6;
+		glm::vec3 pos1 = glm::vec3(vertices[vertex1], vertices[vertex1 + 1], vertices[vertex1 + 2]);
+		glm::vec3 pos2 = glm::vec3(vertices[vertex2], vertices[vertex2 + 1], vertices[vertex2 + 2]);
+		glm::vec3 pos3 = glm::vec3(vertices[vertex3], vertices[vertex3 + 1], vertices[vertex3 + 2]);
+
+		// Calculate edges
+		glm::vec3 edge1 = pos2 - pos1;
+		glm::vec3 edge2 = pos3 - pos1;
+
+		// Get UV's
+		unsigned int uvIndex1 = i * 6;
+		unsigned int uvIndex2 = i * 6 + 2;
+		unsigned int uvIndex3 = i * 6 + 4;
+		glm::vec2 uv1 = glm::vec2(uvs[uvIndex1], uvs[uvIndex1 + 1]);
+		glm::vec2 uv2 = glm::vec2(uvs[uvIndex2], uvs[uvIndex2 + 1]);
+		glm::vec2 uv3 = glm::vec2(uvs[uvIndex3], uvs[uvIndex3 + 1]);
+
+		// Calculate deltaUV's
+		glm::vec2 deltaUV1 = uv2 - uv1;
+		glm::vec2 deltaUV2 = uv3 - uv1;
+
+		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		// Calculate x,y,z for the tangents
+		glm::vec3 tangent = glm::vec3();
+		tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		tangent = glm::normalize(tangent);
+
+		// All tangents same for triangle.
+		for (unsigned int j = 0; j < 3; j++)
+		{
+			tangents[tangentIndex] = tangent.x;
+			tangents[tangentIndex + 1] = tangent.y;
+			tangents[tangentIndex + 2] = tangent.z;
+			tangentIndex += 3;
+		}
+	}
 }
 
 void Terrain::translate(glm::vec3 translation)

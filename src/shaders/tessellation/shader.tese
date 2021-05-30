@@ -3,13 +3,25 @@
 // ccw: emit triangles in counter-clockwise order
 layout(triangles, equal_spacing, ccw) in;
 
-in vec3 FragPos_CS[];
-in vec2 TexCoord_CS[];
-in vec3 Normal_CS[];
+in CS_OUT{
+    vec3 FragPos;
+    vec2 TexCoords;
+    vec3 TangentLightPos;
+    vec3 TangentViewPos;
+    vec3 TangentFragPos;
+    vec3 TangentNormal;
+    vec4 FragPosLightSpace;
+} cs_in[];
 
-out vec3 FragPos_ES;
-out vec2 TexCoord_ES;
-out vec3 Normal_ES;
+out ES_OUT{
+    vec3 FragPos;
+    vec2 TexCoords;
+    vec3 TangentLightPos;
+    vec3 TangentViewPos;
+    vec3 TangentFragPos;
+    vec3 TangentNormal;
+    vec4 FragPosLightSpace;
+} es_out;
 
 // Local to World
 uniform mat4 modelMat;
@@ -20,8 +32,8 @@ uniform mat4 projectionMat;
 
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalMap;
-
 uniform sampler2D displacementMap;
+
 uniform float displacementFactor;
 
 
@@ -38,13 +50,18 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)
 
 void main()
 {
-	// Interpolate using barycentric coordinates
-	FragPos_ES = interpolate3D(FragPos_CS[0], FragPos_CS[1], FragPos_CS[2]);
-	TexCoord_ES = interpolate2D(TexCoord_CS[0], TexCoord_CS[1], TexCoord_CS[2]);
-	Normal_ES = normalize(interpolate3D(Normal_CS[0], Normal_CS[1], Normal_CS[2]));
+    // Interpolate using barycentric coordinates
+    es_out.FragPos = interpolate3D(cs_in[0].FragPos, cs_in[1].FragPos, cs_in[2].FragPos);
+    es_out.TexCoords = interpolate2D(cs_in[0].TexCoords, cs_in[1].TexCoords, cs_in[2].TexCoords);
+    es_out.TangentNormal = normalize(interpolate3D(cs_in[0].TangentNormal, cs_in[1].TangentNormal, cs_in[2].TangentNormal));
 
-	float displacement = texture(displacementMap, TexCoord_ES.xy).x;
-	FragPos_ES += Normal_ES * displacement * displacementFactor;
+    es_out.TangentLightPos = cs_in[0].TangentLightPos;
+    es_out.TangentViewPos = cs_in[0].TangentViewPos;
+    es_out.TangentFragPos = cs_in[0].TangentFragPos;
+    es_out.FragPosLightSpace = cs_in[0].FragPosLightSpace;
 
-	gl_Position = projectionMat * viewMat * vec4(FragPos_ES, 1.0);
+	float displacement = texture(displacementMap, es_out.TexCoords.xy).x;
+	es_out.FragPos += es_out.TangentNormal * displacement * displacementFactor;
+
+	gl_Position = projectionMat * viewMat * vec4(es_out.FragPos, 1.0);
 }

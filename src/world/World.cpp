@@ -101,9 +101,17 @@ World::World(const Camera& camera, const Light& light, unsigned int screenWidth,
 	m_tesselationShader.setInt("normalMap", 1);
 	m_tesselationShader.setInt("displacementMap", 2);
 
+	m_tesselationShader.setMat4("projectionMat", camera.ProjectionMat);
+	m_tesselationShader.setFloat("ambientLightAmount", AmbientLight);
 
-	Material terrainMat = Material(WHITE_TEXTURE, NORMAL_TEXTURE, TERRAIN_DISPLACEMENT, GL_RGB);
-	m_terrain = new Terrain(terrainMat, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f), glm::vec3(10.0f));
+	m_tesselationShader.setFloat("lightIntensity", m_light.intensity);
+	m_tesselationShader.setVec3("lightColor", m_light.color);
+	m_tesselationShader.setVec3("lightPos", m_light.position);
+
+
+	Material terrainMat = Material("art/terrain_displacement.jpg", "art/terrain_normal.jpg", "art/terrain_displacement.jpg", GL_RGB);
+	terrainMat.ambientStrength = 0.5f;
+	m_terrain = new Terrain(terrainMat, glm::vec3(-5.0f, 0.0f, 2.0f), glm::vec3(-90.0f, 0.0f, 0.0f), glm::vec3(1.0f));
 }
 
 void World::Add(Object* object)
@@ -185,7 +193,11 @@ void World::Render(bool wireframeMode)
 	m_tesselationShader.activate();
 	m_tesselationShader.setMat4("viewMat", m_camera.GetViewMat());
 	m_tesselationShader.setVec3("cameraPos", m_camera.Position);
-	m_tesselationShader.setFloat("displacementFactor", 1.0f);
+	m_tesselationShader.setFloat("bumpiness", Input::Bumpiness);
+	m_tesselationShader.setMat4("lightSpaceMat", m_light.lightSpaceMat);
+
+	m_tesselationShader.setFloat("displacementFactor", TesselationDisplacementFactor);
+	m_tesselationShader.setFloat("tesselationAmount", TesselationAmount);
 
 	m_terrain->Render(m_tesselationShader, wireframeMode);
 }

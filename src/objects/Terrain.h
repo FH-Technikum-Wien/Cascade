@@ -22,6 +22,7 @@ public:
 
 private:
 	void initialize();
+	void calculateTangents();
 
 	void translate(glm::vec3 translation);
 	void scale(glm::vec3 scaleFactor);
@@ -36,5 +37,6 @@ private:
 	unsigned int VBO_VERTICES = 0;
 	unsigned int VBO_NORMALS = 0;
 	unsigned int VBO_UVS = 0;
+	unsigned int VBO_TANGENTS = 0;
 };
 

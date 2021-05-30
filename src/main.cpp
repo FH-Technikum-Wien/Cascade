@@ -286,6 +286,16 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		world->MinVariance *= 2;
 	if (key == GLFW_KEY_B && action == GLFW_PRESS)
 		world->MinVariance /= 2;
+
+	if (key == GLFW_KEY_KP_8 && action == GLFW_PRESS)
+		world->TesselationDisplacementFactor *= 2;
+	if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS)
+		world->TesselationDisplacementFactor /= 2;
+
+	if (key == GLFW_KEY_KP_6 && action == GLFW_PRESS)
+		world->TesselationAmount *= 2;
+	if (key == GLFW_KEY_KP_4 && action == GLFW_PRESS)
+		world->TesselationAmount /= 2;
 }
 #pragma endregion
 

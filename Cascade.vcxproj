@@ -196,14 +196,21 @@
     <ClInclude Include="src\objects\Terrain.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="art\aerial_rocks_02_diff_1k.jpg" />
+    <Image Include="art\aerial_rocks_02_disp_1k.jpg" />
+    <Image Include="art\aerial_rocks_02_nor_1k.jpg" />
     <Image Include="art\bricks2.jpg" />
     <Image Include="art\bricks2_disp.jpg" />
     <Image Include="art\bricks2_normal.jpg" />
     <Image Include="art\brickWall.jpg" />
     <Image Include="art\brickWall_normal.jpg" />
     <Image Include="art\landscape_displacement.png" />
+    <Image Include="art\normal.jpg" />
     <Image Include="art\Normal_4k.png" />
     <Image Include="art\particle.png" />
+    <Image Include="art\terrain_displacement.jpg" />
+    <Image Include="art\terrain_normal.jpg" />
+    <Image Include="art\white.jpg" />
     <Image Include="art\White_4k.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
