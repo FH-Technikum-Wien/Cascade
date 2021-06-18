@@ -37,7 +37,6 @@ uniform int refinementSteps;
 void main()
 {
     vec3 cameraDirection = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
-    // Offset coords with ParallaxMapping
     vec2 texCoords = fs_in.TexCoords;
 
     // Get normal from normal map [0,1] and tranform to tangent space [-1,1]

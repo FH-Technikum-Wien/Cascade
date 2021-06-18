@@ -153,10 +153,6 @@ void main()
     // Offset coords with ParallaxMapping
     vec2 texCoords = ParallaxMapping(fs_in.TexCoords, cameraDirection);
 
-    // If outside of [0,1], discard
-    //if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-    //    discard;
-
     vec3 normal = normalize(fs_in.TangentNormal);
     vec3 lightDirection = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
     vec3 reflectionDirection = reflect(-lightDirection, normal);
