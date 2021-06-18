@@ -1,6 +1,8 @@
 #include <stdexcept>
 #include <vector>
 #include <chrono>
+#include <iomanip>
+#include <sstream>
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -83,12 +85,29 @@ int main()
 	float titleLastUpdate = 0;
 	float titleUpdateDelay = 0.2f;
 
+	double deltaTimeSum = 0;
+	int frames = 0;
+	int FPS = 0;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// Calculate deltaTime in seconds
 		auto currentFrameTime = clock.now();
 		double deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentFrameTime - lastFrameTime).count() / 1e9;
 		lastFrameTime = currentFrameTime;
+
+		// Calculate FPS
+		deltaTimeSum += deltaTime;
+		++frames;
+
+		// Update every second
+		if (deltaTimeSum > 1.0f)
+		{
+			FPS = frames;
+			frames = 0;
+			deltaTimeSum = 0;
+		}
+
 
 		printError();
 
@@ -118,18 +137,47 @@ int main()
 
 		if (titleLastUpdate + titleUpdateDelay < glfwGetTime())
 		{
+			std::stringstream stream;
+			stream << std::fixed << std::setprecision(2) << Input::Bumpiness;
+			std::string bumpiness = stream.str();
+			stream.str(std::string());
+
+			stream << std::fixed << std::setprecision(2) << world->HeightScale;
+			std::string heightScale = stream.str();
+			stream.str(std::string());
+
+			stream << std::fixed << std::setprecision(6) << world->MinVariance;
+			std::string variance = stream.str();
+			stream.str(std::string());
+
+			stream << std::fixed << std::setprecision(3) << particleSystem->SpawnFrequence;
+			std::string spawnFrequency = stream.str();
+			stream.str(std::string());
+
+			stream << std::fixed << std::setprecision(3) << world->TesselationAmount;
+			std::string tessAmount = stream.str();
+			stream.str(std::string());
+
+			stream << std::fixed << std::setprecision(3) << world->TesselationDisplacementFactor;
+			std::string tessDisplacement = stream.str();
+			stream.str(std::string());
+
+
 			titleLastUpdate = glfwGetTime();
 			std::string lastInput =
-				"Bumpiness(Wheel): " + std::to_string(Input::Bumpiness) +
-				" | HeightScale(Q,E): " + std::to_string(world->HeightScale) +
+				"FPS: " + std::to_string(FPS) +
+				" | Bumpiness(Wheel): " + bumpiness +
+				" | HeightScale(Q,E): " + heightScale +
 				" | Steps(Right,Left): " + std::to_string(world->Steps) +
-				" | Refinement Steps(Up,Down): " + std::to_string(world->RefinementSteps) +
-				" | MinVariance(v,b): " + std::to_string(world->MinVariance) +
+				" | R-Steps(Up,Down): " + std::to_string(world->RefinementSteps) +
+				" | MinVariance(v,b): " + variance +
 				" | P_Mode(Num[1,2,3]): " + std::to_string(particleSystem->ParticleTypeToSpawn) +
 				" | P_To_Spawn(*,/): " + std::to_string(particleSystem->NumberOfParticlesToSpawn) +
-				" | P_Spawn_Frequency(+,-): " + std::to_string(particleSystem->SpawnFrequence) +
+				" | P_Frequency(+,-): " + spawnFrequency +
 				" | P_Number: " + std::to_string(particleSystem->GetNumberOfParticles()) +
 				" | PG_Number: " + std::to_string(particleSystem->GetNumberOfGenerators());
+				//" | Tess_Level: " + tessAmount +
+				//" | Tess_Displ: " + tessDisplacement;
 			glfwSetWindowTitle(window, lastInput.c_str());
 		}
 
