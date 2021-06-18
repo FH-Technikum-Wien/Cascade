@@ -11,8 +11,6 @@ in ES_OUT{
     vec4 FragPosLightSpace;
 } es_in;
 
-in vec2 TexCoord;
-
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalMap;
 uniform sampler2D displacementMap;
@@ -31,11 +29,6 @@ uniform float ambientLightAmount;
 
 uniform float bumpiness;
 
-float linearStep(float low, float high, float value)
-{
-    return clamp((value - low) / (high - low), 0.0, 1.0);
-}
-
 
 void main()
 {
@@ -45,7 +38,7 @@ void main()
 
     // If outside of [0,1], discard
     //if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-    //    discard;
+    //   discard;
 
     vec3 normal = normalize(es_in.TangentNormal);
     vec3 lightDirection = normalize(es_in.TangentLightPos - es_in.TangentFragPos);
