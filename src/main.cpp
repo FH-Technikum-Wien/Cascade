@@ -56,8 +56,6 @@ int main()
 	proceduralSystem = new ProceduralSystem(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
 	particleSystem = new ParticleSystem(camera);
 
-	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
-	world->Add(new Cube(groundMat, glm::vec3(0.0f, -3.5f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(15.0f, 0.5f, 15.f)));
 
 	Material material = Material("art/bricks2.jpg", "art/bricks2_normal.jpg", "art/bricks2_disp.jpg", GL_RGB);
 	material.ambientStrength = 0.1f;
@@ -66,13 +64,18 @@ int main()
 	material.focus = 32.0f;
 	world->Add(new Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
 
+	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
+
+	// Ground
+	world->Add(new Cube(groundMat, glm::vec3(0.0f, -3.5f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(15.0f, 0.5f, 15.f)));
+
+	world->Add(new Cube(groundMat, glm::vec3(-3.0f, -1.5f, -5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f)));
+
+	world->Add(new Cube(groundMat, glm::vec3(-11.0f, -2.5f, -5.0f), glm::vec3(0.0f, 45.0f, 0.0f), glm::vec3(0.5f)));
+
 	world->Add(new Cube(material, glm::vec3(-5.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
 
 	world->Add(new Cube(material, glm::vec3(7.0f, -1.0f, -6.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f)));
-
-	world->Add(new Cube(groundMat, glm::vec3(-2.5f, -1.5f, -6.0f), glm::vec3(0.0f, 45.0f, 45.0f), glm::vec3(0.5f)));
-
-	world->Add(new Cube(groundMat, glm::vec3(-11.0f, -2.5f, -5.0f), glm::vec3(0.0f, 45.0f, 0.0f), glm::vec3(0.5f)));
 
 	setupKdTree();
 
