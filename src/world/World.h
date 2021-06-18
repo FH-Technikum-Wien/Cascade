@@ -16,6 +16,7 @@ public:
 
 	void Add(Object* object);
 	void Render(bool wireframeMode);
+	void ShowLightFrustum(bool show);
 
 	std::vector<float> GetWorldVertices();
 

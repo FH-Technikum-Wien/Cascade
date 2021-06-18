@@ -1,6 +1,9 @@
 #version 460 core
 // equal_spacing: edge segments of equal length
 // ccw: emit triangles in counter-clockwise order
+// equal_spacing
+// fractional_odd_spacing
+// fractional_even_spacing
 layout(triangles, equal_spacing, ccw) in;
 
 in CS_OUT{

@@ -29,6 +29,7 @@ Camera camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f),
 Light light = Light(glm::vec3(-15.0f, 15.0f, 6.0f), 1.0f);
 
 bool wireframeModeActive = false;
+bool showLightFrustum = false;
 
 World* world;
 
@@ -62,7 +63,7 @@ int main()
 	material.diffuseStrength = 1.0f;
 	material.specularStrength = 0.2f;
 	material.focus = 32.0f;
-	world->Add(new Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
+	
 
 	Material groundMat = Material("art/brickWall.jpg", "art/brickWall_normal.jpg", GL_RGB);
 
@@ -73,9 +74,13 @@ int main()
 
 	world->Add(new Cube(groundMat, glm::vec3(-11.0f, -2.5f, -5.0f), glm::vec3(0.0f, 45.0f, 0.0f), glm::vec3(0.5f)));
 
-	world->Add(new Cube(material, glm::vec3(-5.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
+	world->Add(new Cube(material, glm::vec3(-8.0f, -1.5f, -7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
+
+	world->Add(new Cube(material, glm::vec3(-10.0f, 5.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
 
 	world->Add(new Cube(material, glm::vec3(7.0f, -1.0f, -6.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.0f)));
+
+	world->Add(new Plane(material, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)));
 
 	setupKdTree();
 
@@ -347,6 +352,12 @@ void keyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		world->TesselationAmount *= 2;
 	if (key == GLFW_KEY_KP_4 && action == GLFW_PRESS)
 		world->TesselationAmount /= 2;
+
+	if (key == GLFW_KEY_L && action == GLFW_PRESS)
+	{
+		showLightFrustum = !showLightFrustum;
+		world->ShowLightFrustum(showLightFrustum);
+	}
 }
 #pragma endregion
 

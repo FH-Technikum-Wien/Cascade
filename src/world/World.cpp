@@ -206,6 +206,21 @@ void World::Render(bool wireframeMode)
 	m_terrain2->Render(m_tesselationShader, wireframeMode);
 }
 
+void World::ShowLightFrustum(bool show)
+{
+	glBindTexture(GL_TEXTURE_2D, m_depthMap);
+	if (show)
+	{
+		float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	}
+	else
+	{
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	}
+}
+
 std::vector<float> World::GetWorldVertices()
 {
 	std::vector<float> vertices = std::vector<float>();
